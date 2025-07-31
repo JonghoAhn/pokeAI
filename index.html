@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>포켓몬 AI 윤리 퀴즈 배틀</title>
+    <title>AI 윤리 포켓몬 게임</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
@@ -41,20 +41,104 @@
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 0.5rem;
         }
+        
+        /* 공격 이펙트 스타일 */
+        #attack-animation-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 50;
+        }
+
+        .attack-effect {
+            position: absolute;
+            opacity: 0;
+        }
+
+        /* 전기 타입 이펙트 */
+        .electric-effect {
+            width: 10px;
+            height: 100px;
+            background: yellow;
+            clip-path: polygon(50% 0, 100% 0, 60% 50%, 100% 50%, 50% 100%, 0 100%, 40% 50%, 0 50%);
+            animation: electric-shock 0.5s ease-out forwards;
+        }
+        @keyframes electric-shock {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* 물 타입 이펙트 */
+        .water-effect {
+            width: 30px;
+            height: 30px;
+            background: #3498db;
+            border-radius: 50%;
+            animation: water-pulse 0.7s ease-out forwards;
+        }
+        @keyframes water-pulse {
+            from { transform: translate(var(--start-x), var(--start-y)) scale(0); opacity: 1; }
+            to { transform: translate(var(--end-x), var(--end-y)) scale(1); opacity: 0; }
+        }
+
+        /* 불 타입 이펙트 */
+        .fire-effect {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #ff4500, #ff8c00, transparent);
+            border-radius: 50%;
+            animation: fire-burst 0.5s ease-out forwards;
+        }
+        @keyframes fire-burst {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* 풀 타입 이펙트 */
+        .grass-effect {
+            width: 20px;
+            height: 30px;
+            background-color: #2ecc71;
+            border-radius: 50% 0;
+            animation: leaf-storm 0.8s ease-in-out forwards;
+        }
+        @keyframes leaf-storm {
+            from { transform: translate(var(--start-x), var(--start-y)) rotate(0deg); opacity: 1; }
+            to { transform: translate(var(--end-x), var(--end-y)) rotate(720deg); opacity: 0; }
+        }
+
+        /* 일반/격투 타입 이펙트 */
+        .normal-effect, .fighting-effect {
+             width: 60px;
+             height: 60px;
+             background-image: radial-gradient(circle, white, rgba(255,255,255,0) 70%);
+             animation: impact-flash 0.3s ease-out forwards;
+        }
+        @keyframes impact-flash {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
     </style>
 </head>
 <body class="bg-blue-50 flex items-center justify-center min-h-screen p-2">
 
     <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-4 sm:p-6 relative">
         
-        <div id="volume-control" class="absolute top-4 right-16 cursor-pointer z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100">
-            <svg id="sound-on-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-            </svg>
-            <svg id="sound-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l-4-4m0 4l4-4" />
-            </svg>
+        <div class="absolute top-4 right-16 z-10 flex items-center space-x-2">
+            <div id="volume-control" class="cursor-pointer bg-white rounded-full p-2 shadow-md hover:bg-gray-100">
+                <svg id="sound-on-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+                <svg id="sound-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l-4-4m0 4l4-4" />
+                </svg>
+            </div>
+            <input id="volume-slider" type="range" min="0" max="1" step="0.1" value="0.5" class="w-20">
         </div>
         
         <div id="type-chart-icon" class="absolute top-4 right-4 cursor-pointer z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100">
@@ -63,11 +147,25 @@
             </svg>
         </div>
 
+        <!-- 공격 이펙트 오버레이 -->
+        <div id="attack-animation-overlay"></div>
+
+        <!-- 0. 시작 화면 -->
+        <div id="start-screen" class="screen active flex-col items-center justify-center text-center p-4">
+            <h1 class="text-4xl sm:text-5xl font-bold text-gray-800 mb-4">AI윤리 포켓몬 게임</h1>
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" alt="Pikachu" class="w-40 h-40 mx-auto my-4">
+            <p class="text-gray-600 mb-8 max-w-md">
+                인공지능 윤리 퀴즈를 풀고 기술을 배워 포켓몬 배틀에서 승리하세요!
+                퀴즈를 맞히면 새로운 기술을 배울 수 있습니다. 배운 기술을 활용하여 5개의 스테이지를 모두 클리어하고 AI 윤리 마스터가 되어보세요!
+            </p>
+            <button id="start-game-button" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition transform hover:scale-105">게임 시작</button>
+        </div>
+
         <!-- 1. 포켓몬 선택 화면 -->
-        <div id="selection-screen" class="screen active flex-col items-center">
+        <div id="selection-screen" class="screen flex-col items-center">
             <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">파트너 포켓몬을 선택하세요!</h1>
             <p class="text-gray-500 mb-4 sm:mb-8">선택한 포켓몬에 따라 상대가 달라집니다.</p>
-            <div id="pokemon-options" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6"></div>
+            <div id="pokemon-options" class="grid grid-cols-5 gap-2 sm:gap-4"></div>
         </div>
 
         <!-- 2. 퀴즈 화면 -->
@@ -331,7 +429,7 @@
         let playerInventory = { potion: 0 };
         const QUESTIONS_PER_STAGE = 2;
 
-        const screens = { selection: document.getElementById('selection-screen'), quiz: document.getElementById('quiz-screen'), battle: document.getElementById('battle-screen') };
+        const screens = { start: document.getElementById('start-screen'), selection: document.getElementById('selection-screen'), quiz: document.getElementById('quiz-screen'), battle: document.getElementById('battle-screen') };
         const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal') };
 
         function showScreen(screenName) {
@@ -419,18 +517,36 @@
         function initSelectionScreen() {
             const container = document.getElementById('pokemon-options');
             container.innerHTML = '';
-            for (const key in POKEMONS) {
+            const pokemonKeys = Object.keys(POKEMONS);
+            
+            // 9개의 포켓몬 카드 생성
+            for (let i = 0; i < 9; i++) {
+                const key = pokemonKeys[i];
+                if (!key) continue;
                 const pokemon = POKEMONS[key];
                 const card = document.createElement('div');
-                card.className = 'pokemon-card cursor-pointer bg-gray-100 p-4 rounded-lg text-center';
-                card.innerHTML = `<img src="${pokemon.img}" alt="${pokemon.name}" class="w-24 h-24 mx-auto mb-2"><p class="font-bold text-lg">${pokemon.name}</p><span class="text-sm text-gray-500">${pokemon.types.join(', ')}</span>`;
+                card.className = 'pokemon-card cursor-pointer bg-gray-100 p-2 rounded-lg text-center flex flex-col justify-center items-center aspect-square';
+                card.innerHTML = `<img src="${pokemon.img}" alt="${pokemon.name}" class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-1"><p class="font-bold text-sm sm:text-base">${pokemon.name}</p>`;
                 card.addEventListener('click', () => selectPokemon(key));
                 container.appendChild(card);
             }
+
+            // 랜덤 '?' 카드 생성
+            const randomCard = document.createElement('div');
+            randomCard.className = 'pokemon-card cursor-pointer bg-gray-200 p-2 rounded-lg text-center flex flex-col justify-center items-center aspect-square';
+            randomCard.innerHTML = `<div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-1 flex items-center justify-center text-5xl font-bold text-gray-500">?</div><p class="font-bold text-sm sm:text-base">랜덤</p>`;
+            randomCard.addEventListener('click', () => selectPokemon('random'));
+            container.appendChild(randomCard);
         }
 
         function selectPokemon(key) {
-            playerPokemon = { ...POKEMONS[key], maxHp: POKEMONS[key].hp, statusEffects: {}, statModifiers: { attack: 0 } };
+            let selectedKey = key;
+            if (key === 'random') {
+                const keys = Object.keys(POKEMONS);
+                selectedKey = keys[Math.floor(Math.random() * keys.length)];
+            }
+
+            playerPokemon = { ...POKEMONS[selectedKey], maxHp: POKEMONS[selectedKey].hp, statusEffects: {}, statModifiers: { attack: 0 } };
             learnedSkills = [];
             playerInventory = { potion: 1 }; // 시작 시 상처약 1개 지급
             currentStage = 0;
@@ -711,20 +827,75 @@
             return finalDamage > 0 ? Math.round(finalDamage) : 0;
         }
 
+        function playAttackAnimation(skill, attackerId, defenderId) {
+            const overlay = document.getElementById('attack-animation-overlay');
+            const attackerElem = document.getElementById(attackerId);
+            const defenderElem = document.getElementById(defenderId);
+            if (!attackerElem || !defenderElem) return;
+
+            const attackerRect = attackerElem.getBoundingClientRect();
+            const defenderRect = defenderElem.getBoundingClientRect();
+            const overlayRect = overlay.getBoundingClientRect();
+
+            const startX = attackerRect.left - overlayRect.left + attackerRect.width / 2;
+            const startY = attackerRect.top - overlayRect.top + attackerRect.height / 2;
+            const endX = defenderRect.left - overlayRect.left + defenderRect.width / 2;
+            const endY = defenderRect.top - overlayRect.top + defenderRect.height / 2;
+
+            const effect = document.createElement('div');
+            effect.className = 'attack-effect';
+            
+            let animationClass = '';
+            switch(skill.type) {
+                case '전기': animationClass = 'electric-effect'; break;
+                case '물': animationClass = 'water-effect'; break;
+                case '불': animationClass = 'fire-effect'; break;
+                case '풀': animationClass = 'grass-effect'; break;
+                case '노말': animationClass = 'normal-effect'; break;
+                case '격투': animationClass = 'fighting-effect'; break;
+                // 다른 타입들도 추가 가능
+            }
+
+            if (animationClass) {
+                effect.classList.add(animationClass);
+                effect.style.setProperty('--start-x', `${startX}px`);
+                effect.style.setProperty('--start-y', `${startY}px`);
+                effect.style.setProperty('--end-x', `${endX}px`);
+                effect.style.setProperty('--end-y', `${endY}px`);
+                
+                if (['electric-effect', 'fire-effect', 'normal-effect', 'fighting-effect'].includes(animationClass)) {
+                    effect.style.left = `${endX - effect.offsetWidth / 2}px`;
+                    effect.style.top = `${endY - effect.offsetHeight / 2}px`;
+                } else {
+                    effect.style.left = `0px`;
+                    effect.style.top = `0px`;
+                }
+                
+                overlay.appendChild(effect);
+                setTimeout(() => {
+                    overlay.removeChild(effect);
+                }, 800);
+            }
+        }
+
         function attack(attacker, defender, skill, onComplete) {
             const attackerElem = document.getElementById(`${attacker.id}-img`);
             attackerElem.classList.add('attack');
             setTimeout(() => attackerElem.classList.remove('attack'), 300);
+            
+            playAttackAnimation(skill, `${attacker.id}-img`, `${defender.id}-img`);
+
             logMessage(`${attacker.pokemon.name}의 ${skill.name} 공격!`);
-            const damage = calculateDamage(skill, attacker.pokemon, defender.pokemon);
+            
             setTimeout(() => {
+                const damage = calculateDamage(skill, attacker.pokemon, defender.pokemon);
                 defender.pokemon.hp -= damage;
                 updateHpBar(defender.id, defender.pokemon.hp, defender.pokemon.maxHp);
                 const defenderElem = document.getElementById(`${defender.id}-img`);
                 defenderElem.classList.add('damaged');
                 setTimeout(() => defenderElem.classList.remove('damaged'), 500);
                 onComplete();
-            }, 500);
+            }, 400); // 애니메이션 시간 고려
         }
 
         function disableAllActions() {
@@ -833,11 +1004,13 @@
                 const effect = skill.effect;
                 setTimeout(() => {
                     if (effect && effect.type === 'stat') {
-                        const targetPokemon = effect.target === 'player' ? playerPokemon : opponentPokemon;
+                        // BUG FIX: Correctly target player when opponent uses a move with target 'opponent'
+                        const targetPokemon = effect.target === 'opponent' ? playerPokemon : opponentPokemon;
+                        const targetName = effect.target === 'opponent' ? playerPokemon.name : opponentPokemon.name;
+
                         targetPokemon.statModifiers[effect.stat] += effect.change;
                         targetPokemon.statModifiers[effect.stat] = Math.max(-6, Math.min(6, targetPokemon.statModifiers[effect.stat]));
                         
-                        let targetName = effect.target === 'player' ? playerPokemon.name : opponentPokemon.name;
                         let statName = '공격력';
                         let changeText = effect.change > 0 ? '올랐다!' : '떨어졌다!';
                         if (Math.abs(effect.change) >= 2) changeText = '크게 ' + changeText;
@@ -894,8 +1067,7 @@
             bgmQuiz.pause();
             bgmQuiz.currentTime = 0;
             hideModals();
-            showScreen('selection');
-            initSelectionScreen();
+            showScreen('start');
         }
         
         // --- BGM 제어 ---
@@ -904,10 +1076,11 @@
         const volumeControl = document.getElementById('volume-control');
         const soundOnIcon = document.getElementById('sound-on-icon');
         const soundOffIcon = document.getElementById('sound-off-icon');
+        const volumeSlider = document.getElementById('volume-slider');
         let isMuted = false;
 
-        bgmBattle.volume = 0.5;
-        bgmQuiz.volume = 0.5;
+        bgmBattle.volume = volumeSlider.value;
+        bgmQuiz.volume = volumeSlider.value;
 
         function toggleMute() {
             isMuted = !isMuted;
@@ -915,10 +1088,37 @@
             bgmQuiz.muted = isMuted;
             soundOnIcon.classList.toggle('hidden', isMuted);
             soundOffIcon.classList.toggle('hidden', !isMuted);
+            if (isMuted) {
+                volumeSlider.value = 0;
+            } else {
+                volumeSlider.value = bgmBattle.volume;
+            }
         }
 
         volumeControl.addEventListener('click', toggleMute);
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value;
+            bgmBattle.volume = volume;
+            bgmQuiz.volume = volume;
 
+            if (volume > 0 && isMuted) {
+                isMuted = false;
+                bgmBattle.muted = false;
+                bgmQuiz.muted = false;
+                soundOnIcon.classList.remove('hidden');
+                soundOffIcon.classList.add('hidden');
+            } else if (volume == 0 && !isMuted) {
+                isMuted = true;
+                bgmBattle.muted = true;
+                bgmQuiz.muted = true;
+                soundOnIcon.classList.add('hidden');
+                soundOffIcon.classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('start-game-button').addEventListener('click', () => {
+            showScreen('selection');
+        });
         document.getElementById('play-again-button').addEventListener('click', resetGame);
         document.getElementById('next-stage-button').addEventListener('click', () => {
             currentStage++;
@@ -933,7 +1133,10 @@
         document.getElementById('close-type-chart-button').addEventListener('click', hideModals);
 
 
-        window.onload = initSelectionScreen;
+        window.onload = () => {
+            initSelectionScreen();
+            showScreen('start');
+        };
         
     </script>
 </body>
