@@ -266,6 +266,7 @@ function performAttack(attacker, defender, skill, onComplete) {
     };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     const updateVolume = () => {
         const volume = isSoundMuted ? 0 : volumeControl.slider.value;
         Object.values(audio).forEach(a => a.volume = volume);
@@ -296,6 +297,8 @@ function performAttack(attacker, defender, skill, onComplete) {
         });
         volumeControl.slider.addEventListener('input', updateVolume);
 =======
+=======
+>>>>>>> parent of 031b21e (이펙트 추가)
         if (skill.effect) applyEffect(skill.effect, attacker, defender);
         defenderImg.classList.add('shake');
         updateBattleUI();
@@ -384,6 +387,9 @@ function opponentAttack() {
         else {
             isBattling = true;
             updateBattleUI(); // Update UI to re-enable buttons
+<<<<<<< HEAD
+>>>>>>> parent of 031b21e (이펙트 추가)
+=======
 >>>>>>> parent of 031b21e (이펙트 추가)
         }
         
