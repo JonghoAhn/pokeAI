@@ -6,6 +6,7 @@
     <title>AI 윤리 포켓몬 게임</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
         body {
             font-family: 'Jua', sans-serif;
@@ -128,7 +129,20 @@
 
     <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-4 sm:p-6 relative">
         
-        <div class="absolute top-4 right-16 z-10 flex items-center space-x-2">
+        <div class="absolute top-4 right-4 z-10 flex items-center space-x-2">
+             <div id="hall-of-fame-button" class="cursor-pointer bg-white rounded-full p-2 shadow-md hover:bg-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8.736 2.17a1.5 1.5 0 0 0-1.472 0l-3.238 2.024L.5 6.435a1.5 1.5 0 0 0-1.5 1.5v3.63a1.5 1.5 0 0 0 1.5 1.5h1.28l1.05 3.393a1.5 1.5 0 0 0 2.824 0l1.05-3.393h1.28a1.5 1.5 0 0 0 1.5-1.5v-3.63a1.5 1.5 0 0 0-1.5-1.5L11.474 4.194 8.736 2.17zM8 5.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/>
+                </svg>
+            </div>
+            <div id="type-chart-icon" class="cursor-pointer bg-white rounded-full p-2 shadow-md hover:bg-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="absolute bottom-4 left-4 z-10 flex items-center space-x-2">
             <div id="volume-control" class="cursor-pointer bg-white rounded-full p-2 shadow-md hover:bg-gray-100">
                 <svg id="sound-on-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
@@ -138,13 +152,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l-4-4m0 4l4-4" />
                 </svg>
             </div>
-            <input id="volume-slider" type="range" min="0" max="1" step="0.1" value="0.5" class="w-20">
-        </div>
-        
-        <div id="type-chart-icon" class="absolute top-4 right-4 cursor-pointer z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <input id="volume-slider" type="range" min="0" max="1" step="0.1" value="0.5" class="w-24">
         </div>
 
         <!-- 공격 이펙트 오버레이 -->
@@ -156,7 +164,7 @@
             <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" alt="Pikachu" class="w-40 h-40 mx-auto my-4">
             <p class="text-gray-600 mb-8 max-w-md">
                 인공지능 윤리 퀴즈를 풀고 기술을 배워 포켓몬 배틀에서 승리하세요!
-                퀴즈를 맞히면 새로운 기술을 배울 수 있습니다. 배운 기술을 활용하여 5개의 스테이지를 모두 클리어하고 AI 윤리 마스터가 되어보세요!
+                퀴즈를 맞히면 새로운 기술을 배울 수 있습니다. 배운 기술을 활용하여 7개의 스테이지를 모두 클리어하고 AI 윤리 마스터가 되어보세요!
             </p>
             <button id="start-game-button" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition transform hover:scale-105">게임 시작</button>
         </div>
@@ -220,7 +228,7 @@
         </div>
 
         <!-- 모달 그룹 -->
-        <div id="stage-clear-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center">
+        <div id="stage-clear-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl">
                 <h2 class="text-3xl font-bold mb-4 text-blue-500">🎉 스테이지 클리어! 🎉</h2>
                 <div id="stage-clear-message" class="text-gray-600 mb-6"></div>
@@ -228,15 +236,45 @@
             </div>
         </div>
 
-        <div id="result-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center">
+        <div id="result-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl">
                 <h2 id="result-title" class="text-4xl font-bold mb-4"></h2>
                 <p id="result-message" class="text-gray-600 mb-6"></p>
                 <button id="play-again-button" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg text-lg">다시하기</button>
             </div>
         </div>
+
+        <div id="record-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30">
+            <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-sm">
+                <h2 class="text-3xl font-bold mb-4 text-yellow-500">🏆 최종 승리! 🏆</h2>
+                <p class="text-gray-600 mb-6">명예의 전당에 이름을 남기세요!</p>
+                <input type="text" id="nickname-input" placeholder="닉네임을 입력하세요" class="w-full p-2 border border-gray-300 rounded-lg mb-4">
+                <button id="submit-record-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg text-lg">등록하기</button>
+            </div>
+        </div>
+
+        <div id="hall-of-fame-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center p-4 z-40">
+            <div class="bg-white rounded-2xl p-6 shadow-xl w-full max-w-lg relative">
+                <button id="close-hof-button" class="absolute top-2 right-2 bg-red-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-lg">&times;</button>
+                <h2 class="text-3xl font-bold mb-4 text-center text-yellow-500">🏆 명예의 전당 🏆</h2>
+                <div class="max-h-80 overflow-y-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="p-2">날짜</th>
+                                <th class="p-2">닉네임</th>
+                                <th class="p-2">클리어 스테이지</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hall-of-fame-body">
+                            <!-- 기록이 여기에 추가됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
         
-        <div id="skill-selection-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center">
+        <div id="skill-selection-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-md">
                 <h2 class="text-3xl font-bold mb-4 text-indigo-600">기술 배우기!</h2>
                 <p class="text-gray-600 mb-6">퀴즈 정답! 배울 기술을 하나 선택하세요.</p>
@@ -244,7 +282,7 @@
             </div>
         </div>
 
-        <div id="forget-skill-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center">
+        <div id="forget-skill-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-md">
                 <h2 class="text-3xl font-bold mb-4 text-red-600">기술이 가득 찼습니다!</h2>
                 <p class="text-gray-600 mb-2">새로운 기술을 배우려면 기존 기술 중 하나를 잊어야 합니다.</p>
@@ -254,7 +292,7 @@
             </div>
         </div>
 
-        <div id="explanation-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center p-4">
+        <div id="explanation-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center p-4 z-30">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-md">
                 <h2 id="explanation-title" class="text-3xl font-bold mb-4"></h2>
                 <p id="explanation-text" class="text-gray-700 mb-6 text-left"></p>
@@ -262,7 +300,7 @@
             </div>
         </div>
         
-        <div id="type-chart-modal" class="modal fixed inset-0 bg-black bg-opacity-80 items-center justify-center p-4 z-20">
+        <div id="type-chart-modal" class="modal fixed inset-0 bg-black bg-opacity-80 items-center justify-center p-4 z-40">
             <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-xl w-full max-w-3xl relative overflow-y-auto max-h-full">
                 <button id="close-type-chart-button" class="sticky top-0 left-full bg-red-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-lg z-30">&times;</button>
                 <h2 class="text-2xl font-bold mb-4 text-center">타입 상성 요약</h2>
@@ -353,6 +391,11 @@
         const growlSkill = SKILLS['노말'].find(s => s.name === '울음소리');
 
         const OPPONENT_POOL = [
+            // 쉬운 포켓몬 추가
+            { id: 'rattata', name: '꼬렛', hp: 80, maxHp: 80, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/19.png', types: ['노말'], skills: [{ name: '몸통박치기', power: 20, type: '노말' }] },
+            { id: 'pidgey', name: '구구', hp: 85, maxHp: 85, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/16.png', types: ['노말', '비행'], skills: [{ name: '공중날기', power: 20, type: '비행' }] },
+            { id: 'clefairy', name: '삐삐', hp: 90, maxHp: 90, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/35.png', types: ['페어리'], skills: [{ name: '몸통박치기', power: 20, type: '노말' }] },
+            // 기존 포켓몬
             { id: 'pidgeot', name: '피죤투', hp: 100, maxHp: 100, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/18.png', types: ['노말', '비행'], skills: [{ name: '공중날기', power: 25, type: '비행' }, growlSkill] },
             { id: 'nidoking', name: '니드킹', hp: 120, maxHp: 120, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/34.png', types: ['독', '땅'], skills: [{ name: '지진', power: 30, type: '땅' }, growlSkill] },
             { id: 'arcanine', name: '윈디', hp: 150, maxHp: 150, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/59.png', types: ['불'], skills: [{ name: '화염방사', power: 30, type: '불' }] },
@@ -430,7 +473,7 @@
         const QUESTIONS_PER_STAGE = 2;
 
         const screens = { start: document.getElementById('start-screen'), selection: document.getElementById('selection-screen'), quiz: document.getElementById('quiz-screen'), battle: document.getElementById('battle-screen') };
-        const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal') };
+        const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal'), record: document.getElementById('record-modal'), hallOfFame: document.getElementById('hall-of-fame-modal') };
 
         function showScreen(screenName) {
             Object.values(screens).forEach(screen => screen.classList.remove('active'));
@@ -468,34 +511,45 @@
         function generateStages(player) {
             let stages = [];
             const legendary_ids = ['articuno', 'zapdos', 'moltres'];
-            
-            const legendaryPool = OPPONENT_POOL.filter(p => legendary_ids.includes(p.id));
-            let availableOpponents = OPPONENT_POOL.filter(p => !legendary_ids.includes(p.id));
+            const easy_ids = ['rattata', 'pidgey', 'clefairy'];
 
-            const opponentsWithScores = availableOpponents.map(opp => ({
+            const easyPool = OPPONENT_POOL.filter(p => easy_ids.includes(p.id));
+            const legendaryPool = OPPONENT_POOL.filter(p => legendary_ids.includes(p.id));
+            let normalPool = OPPONENT_POOL.filter(p => !legendary_ids.includes(p.id) && !easy_ids.includes(p.id));
+
+            const opponentsWithScores = normalPool.map(opp => ({
                 ...opp,
                 score: calculateMatchupScore(player.types, opp.types) // 점수가 낮을수록 플레이어에게 유리
             }));
 
             const stageDifficultyFilters = [
-                opp => opp.score <= 1, 
-                opp => opp.score <= 1,
-                opp => opp.score > 1 && opp.score < 4, 
-                opp => opp.score > 1 && opp.score < 4
+                null, // Stage 1: Easy Pool
+                null, // Stage 2: Easy Pool
+                opp => opp.score <= 1, // Stage 3
+                opp => opp.score <= 1, // Stage 4
+                opp => opp.score > 1 && opp.score < 4, // Stage 5
+                opp => opp.score > 1 && opp.score < 4, // Stage 6
             ];
             
-            const stageNames = ["초보 트레이너", "체육관 관장", "사천왕", "라이벌", "챔피언"];
+            const stageNames = ["초보 트레이너", "두번째 트레이너", "체육관 관장", "엘리트 트레이너", "사천왕", "라이벌", "챔피언"];
             let usedOpponentIds = new Set();
 
-            for (let i = 0; i < 4; i++) { // 스테이지 4까지만 생성
-                let pool = opponentsWithScores.filter(opp => !usedOpponentIds.has(opp.id));
-                let filteredPool = pool.filter(stageDifficultyFilters[i]);
-                
-                if (filteredPool.length === 0) { 
-                    filteredPool = pool.length > 0 ? pool : opponentsWithScores.filter(opp => !usedOpponentIds.has(opp.id));
+            for (let i = 0; i < 6; i++) {
+                let pool;
+                if (i < 2) {
+                    pool = easyPool.filter(opp => !usedOpponentIds.has(opp.id));
+                    if (pool.length === 0) pool = easyPool; // 중복 허용
+                } else {
+                    pool = opponentsWithScores.filter(opp => !usedOpponentIds.has(opp.id));
+                    let filteredPool = pool.filter(stageDifficultyFilters[i]);
+                    if (filteredPool.length === 0) { 
+                        pool = pool.length > 0 ? pool : opponentsWithScores;
+                    } else {
+                        pool = filteredPool;
+                    }
                 }
                 
-                const selectedOpponent = filteredPool[Math.floor(Math.random() * filteredPool.length)];
+                const selectedOpponent = pool[Math.floor(Math.random() * pool.length)];
                 usedOpponentIds.add(selectedOpponent.id);
 
                 stages.push({
@@ -506,7 +560,7 @@
 
             const finalBoss = legendaryPool[Math.floor(Math.random() * legendaryPool.length)];
             stages.push({
-                name: `Stage 5: ${stageNames[4]}`,
+                name: `Stage 7: ${stageNames[6]}`,
                 opponent: finalBoss
             });
 
@@ -527,7 +581,10 @@
                 const card = document.createElement('div');
                 card.className = 'pokemon-card cursor-pointer bg-gray-100 p-2 rounded-lg text-center flex flex-col justify-center items-center aspect-square';
                 card.innerHTML = `<img src="${pokemon.img}" alt="${pokemon.name}" class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-1"><p class="font-bold text-sm sm:text-base">${pokemon.name}</p>`;
-                card.addEventListener('click', () => selectPokemon(key));
+                card.addEventListener('click', () => {
+                    playClickSound();
+                    selectPokemon(key);
+                });
                 container.appendChild(card);
             }
 
@@ -535,7 +592,10 @@
             const randomCard = document.createElement('div');
             randomCard.className = 'pokemon-card cursor-pointer bg-gray-200 p-2 rounded-lg text-center flex flex-col justify-center items-center aspect-square';
             randomCard.innerHTML = `<div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-1 flex items-center justify-center text-5xl font-bold text-gray-500">?</div><p class="font-bold text-sm sm:text-base">랜덤</p>`;
-            randomCard.addEventListener('click', () => selectPokemon('random'));
+            randomCard.addEventListener('click', () => {
+                playClickSound();
+                selectPokemon('random');
+            });
             container.appendChild(randomCard);
         }
 
@@ -609,7 +669,10 @@
                 const button = document.createElement('button');
                 button.className = 'bg-white hover:bg-blue-100 text-blue-800 font-semibold py-3 px-4 border border-blue-400 rounded-lg shadow transition text-sm sm:text-base';
                 button.textContent = option;
-                button.onclick = () => checkAnswer(option);
+                button.onclick = () => {
+                    playClickSound();
+                    checkAnswer(option);
+                };
                 container.appendChild(button);
             });
         }
@@ -674,7 +737,10 @@
                 const skillDesc = skill.power ? `위력: ${skill.power}` : skill.description;
                 button.className = 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow transition';
                 button.textContent = `${skill.name} (${skill.type}, ${skillDesc})`;
-                button.onclick = () => learnSkill(skill);
+                button.onclick = () => {
+                    playClickSound();
+                    learnSkill(skill);
+                };
                 choicesContainer.appendChild(button);
             });
             showModal('skillSelection');
@@ -703,7 +769,10 @@
                 const button = document.createElement('button');
                 button.className = 'bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow transition';
                 button.textContent = `잊기: ${skill.name}`;
-                button.onclick = () => replaceSkill(index, newSkill);
+                button.onclick = () => {
+                    playClickSound();
+                    replaceSkill(index, newSkill);
+                };
                 choicesContainer.appendChild(button);
             });
             showModal('forgetSkill');
@@ -731,7 +800,10 @@
                         button.disabled = true;
                         button.classList.add('opacity-50', 'cursor-not-allowed');
                     }
-                    button.onclick = () => playerTurn(skill);
+                    button.onclick = () => {
+                        playClickSound();
+                        playerTurn(skill);
+                    };
                     skillButtonsContainer.appendChild(button);
                 });
             } else {
@@ -739,7 +811,10 @@
                 const button = document.createElement('button');
                 button.className = 'bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-lg shadow transition text-sm col-span-2';
                 button.textContent = '발버둥치기';
-                button.onclick = () => playerTurn(STRUGGLE_SKILL);
+                button.onclick = () => {
+                    playClickSound();
+                    playerTurn(STRUGGLE_SKILL);
+                };
                 skillButtonsContainer.appendChild(button);
             }
 
@@ -750,7 +825,10 @@
                 const button = document.createElement('button');
                 button.className = 'bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-3 rounded-lg shadow transition text-sm col-span-2';
                 button.textContent = `상처약 (${playerInventory.potion}개)`;
-                button.onclick = () => useItem('potion');
+                button.onclick = () => {
+                    playClickSound();
+                    useItem('potion');
+                };
                 itemButtonsContainer.appendChild(button);
             } else {
                  itemButtonsContainer.innerHTML = '<p class="text-gray-500 text-center col-span-2">가방이 비었다</p>';
@@ -1047,9 +1125,7 @@
                         `;
                         showModal('stageClear');
                     } else {
-                        document.getElementById('result-title').textContent = '🏆 최종 승리! 🏆';
-                        document.getElementById('result-message').textContent = '모든 스테이지를 클리어했습니다! 당신은 진정한 AI 윤리 포켓몬 마스터!';
-                        showModal('result');
+                        showModal('record');
                     }
                 } else {
                     document.getElementById('result-title').textContent = '패배...';
@@ -1078,6 +1154,16 @@
         const soundOffIcon = document.getElementById('sound-off-icon');
         const volumeSlider = document.getElementById('volume-slider');
         let isMuted = false;
+        const clickSound = new Tone.Synth({
+            oscillator: { type: 'sine' },
+            envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 }
+        }).toDestination();
+
+        function playClickSound() {
+            if (!isMuted) {
+                clickSound.triggerAttackRelease("C5", "8n");
+            }
+        }
 
         bgmBattle.volume = volumeSlider.value;
         bgmQuiz.volume = volumeSlider.value;
@@ -1116,21 +1202,99 @@
             }
         });
 
+        // --- 명예의 전당 ---
+        async function loadRecords() {
+            try {
+                // GitHub Pages 등에서 record.json 파일을 불러옵니다.
+                const response = await fetch('record.json');
+                if (!response.ok) return []; // 파일이 없으면 빈 배열 반환
+                return await response.json();
+            } catch (error) {
+                console.warn("record.json을 불러올 수 없습니다. localStorage를 사용합니다.");
+                const records = localStorage.getItem('hallOfFame');
+                return records ? JSON.parse(records) : [];
+            }
+        }
+
+        async function saveRecord(nickname) {
+            const records = await loadRecords();
+            const today = new Date();
+            const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            
+            records.push({ date: dateString, nickname: nickname, score: currentStage + 1 });
+            records.sort((a, b) => b.score - a.score); // 점수 내림차순 정렬
+            
+            // localStorage에 저장 (GitHub에 직접 쓸 수 없으므로)
+            // 실제 웹서버에서는 이 부분에 서버로 데이터를 보내는 로직을 구현해야 합니다.
+            localStorage.setItem('hallOfFame', JSON.stringify(records.slice(0, 10))); // 상위 10개만 저장
+            
+            alert('기록이 저장되었습니다!');
+            resetGame();
+        }
+
+        async function displayHallOfFame() {
+            const records = await loadRecords();
+            const tbody = document.getElementById('hall-of-fame-body');
+            tbody.innerHTML = '';
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4">아직 기록이 없습니다.</td></tr>';
+            } else {
+                records.forEach(record => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td class="p-2">${record.date}</td><td class="p-2">${record.nickname}</td><td class="p-2">${record.score}</td>`;
+                    tbody.appendChild(tr);
+                });
+            }
+            showModal('hallOfFame');
+        }
+
         document.getElementById('start-game-button').addEventListener('click', () => {
+            playClickSound();
             showScreen('selection');
         });
-        document.getElementById('play-again-button').addEventListener('click', resetGame);
+        document.getElementById('play-again-button').addEventListener('click', () => {
+            playClickSound();
+            resetGame();
+        });
         document.getElementById('next-stage-button').addEventListener('click', () => {
+            playClickSound();
             currentStage++;
             startStage();
         });
         document.getElementById('cancel-forget-button').addEventListener('click', () => {
+            playClickSound();
             hideModals();
             proceedToNextQuestion();
         });
-        document.getElementById('next-question-button').addEventListener('click', proceedAfterExplanation);
-        document.getElementById('type-chart-icon').addEventListener('click', () => showModal('typeChart'));
-        document.getElementById('close-type-chart-button').addEventListener('click', hideModals);
+        document.getElementById('next-question-button').addEventListener('click', () => {
+            playClickSound();
+            proceedAfterExplanation();
+        });
+        document.getElementById('type-chart-icon').addEventListener('click', () => {
+            playClickSound();
+            showModal('typeChart');
+        });
+        document.getElementById('close-type-chart-button').addEventListener('click', () => {
+             playClickSound();
+             hideModals();
+        });
+        document.getElementById('hall-of-fame-button').addEventListener('click', () => {
+            playClickSound();
+            displayHallOfFame();
+        });
+        document.getElementById('close-hof-button').addEventListener('click', () => {
+            playClickSound();
+            hideModals();
+        });
+        document.getElementById('submit-record-button').addEventListener('click', () => {
+            playClickSound();
+            const nicknameInput = document.getElementById('nickname-input');
+            if (nicknameInput.value.trim() === '') {
+                alert('닉네임을 입력해주세요!');
+                return;
+            }
+            saveRecord(nicknameInput.value.trim());
+        });
 
 
         window.onload = () => {
