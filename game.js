@@ -273,9 +273,19 @@ function toggleBattleButtons(disabled) {
         if (disabled) {
             button.classList.add('opacity-50', 'cursor-not-allowed');
         } else {
-            // Re-enable only if logically possible (e.g., potion available)
-            if (button.id === 'potion-button' && (playerInventory.potion <= 0 || playerPokemon.hp === playerPokemon.maxHp)) {
-                // Keep it disabled
+            // Re-enable only if logically possible (e.g., potion available or skill has PP)
+            const isPotionButton = button.id === 'potion-button';
+            const isStruggle = button.textContent.includes(STRUGGLE_SKILL.name);
+            
+            if (isPotionButton && (playerInventory.potion <= 0 || playerPokemon.hp === playerPokemon.maxHp)) {
+                // Keep potion button disabled if unusable
+            } else if (!isPotionButton && !isStruggle) {
+                // For regular skills, check PP
+                const skillName = button.innerHTML.split('<br>')[0];
+                const skill = battleSkills.find(s => s.name === skillName);
+                if (skill && skill.pp > 0) {
+                    button.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
             } else {
                  button.classList.remove('opacity-50', 'cursor-not-allowed');
             }
@@ -378,7 +388,7 @@ function playAttackAnimation(attackerImg, defenderImg, skill) {
     overlay.appendChild(effectDiv);
 
     setTimeout(() => {
-        effectDiv.remove();
+        if (effectDiv) effectDiv.remove();
     }, 1000);
 }
 
@@ -533,4 +543,41 @@ function showHallOfFame() {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4">아직 기록이 없습니다.</td></tr>';
         } else {
             records.forEach(r => {
-                tbody.innerHTML += `<tr><td class="p-2 border-t">${r.date}</td><td class="p-2 border-t">${r.nickname} (${r.pokemon})</td><td cla
+                tbody.innerHTML += `<tr><td class="p-2 border-t">${r.date}</td><td class="p-2 border-t">${r.nickname} (${r.pokemon})</td><td class="p-2 border-t">${r.clearedStages}</td></tr>`;
+            });
+        }
+    } catch (e) { console.error("Could not load records from localStorage:", e); }
+    showModal('hallOfFame');
+}
+
+// --- Event Listeners ---
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('start-game-button').addEventListener('click', () => { initSelectionScreen(); showScreen('selection'); });
+    document.getElementById('next-question-button').addEventListener('click', proceedAfterExplanation);
+    document.getElementById('next-stage-button').addEventListener('click', startStage);
+    document.getElementById('play-again-button').addEventListener('click', resetGame);
+    document.getElementById('cancel-forget-button').addEventListener('click', startBattle);
+    document.getElementById('hall-of-fame-button').addEventListener('click', showHallOfFame);
+    document.getElementById('submit-record-button').addEventListener('click', () => saveRecord(true));
+    document.getElementById('close-hof-button').addEventListener('click', hideModals);
+    document.getElementById('type-chart-icon').addEventListener('click', () => showModal('typeChart'));
+    document.getElementById('close-type-chart-button').addEventListener('click', hideModals);
+
+    const volumeSlider = document.getElementById('volume-slider');
+    const soundOnIcon = document.getElementById('sound-on-icon');
+    const soundOffIcon = document.getElementById('sound-off-icon');
+    function setVolume(volume) {
+        bgm.battle.volume = volume;
+        bgm.quiz.volume = volume;
+        soundOnIcon.classList.toggle('hidden', volume <= 0);
+        soundOffIcon.classList.toggle('hidden', volume > 0);
+    }
+    volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
+    document.getElementById('volume-control').addEventListener('click', () => {
+        const newVolume = volumeSlider.value > 0 ? 0 : 0.5;
+        volumeSlider.value = newVolume;
+        setVolume(newVolume);
+    });
+    setVolume(volumeSlider.value);
+    showScreen('start');
+});
