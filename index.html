@@ -43,9 +43,19 @@
         }
     </style>
 </head>
-<body class="bg-blue-50 flex items-center justify-center min-h-screen">
+<body class="bg-blue-50 flex items-center justify-center min-h-screen p-2">
 
-    <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-4 sm:p-8 relative">
+    <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-4 sm:p-6 relative">
+        
+        <div id="volume-control" class="absolute top-4 right-16 cursor-pointer z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100">
+            <svg id="sound-on-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+            <svg id="sound-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l-4-4m0 4l4-4" />
+            </svg>
+        </div>
         
         <div id="type-chart-icon" class="absolute top-4 right-4 cursor-pointer z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-100">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -56,7 +66,7 @@
         <!-- 1. 포켓몬 선택 화면 -->
         <div id="selection-screen" class="screen active flex-col items-center">
             <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">파트너 포켓몬을 선택하세요!</h1>
-            <p class="text-gray-500 mb-8">선택한 포켓몬에 따라 상대가 달라집니다.</p>
+            <p class="text-gray-500 mb-4 sm:mb-8">선택한 포켓몬에 따라 상대가 달라집니다.</p>
             <div id="pokemon-options" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6"></div>
         </div>
 
@@ -75,7 +85,7 @@
             </div>
             <div class="w-full bg-gray-100 rounded-lg p-6 text-center shadow-inner">
                 <p id="question-number" class="text-sm text-indigo-500 font-bold mb-2"></p>
-                <p id="question-text" class="text-lg sm:text-xl font-bold text-gray-800 mb-6 h-24 flex items-center justify-center"></p>
+                <p id="question-text" class="text-lg sm:text-xl font-bold text-gray-800 mb-6 min-h-[6rem] flex items-center justify-center"></p>
                 <div id="answer-options" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
             </div>
             <div id="feedback-message" class="mt-4 text-lg font-bold h-6"></div>
@@ -87,7 +97,7 @@
             <div class="flex justify-end mb-4">
                 <div class="text-right">
                     <h2 id="opponent-name" class="text-xl font-bold"></h2>
-                    <div class="w-48 bg-gray-300 rounded-full h-5 border-2 border-gray-400">
+                    <div class="w-36 sm:w-48 bg-gray-300 rounded-full h-5 border-2 border-gray-400">
                         <div id="opponent-hp" class="bg-green-500 h-full rounded-full text-xs text-white text-center font-bold" style="width: 100%;">HP</div>
                     </div>
                 </div>
@@ -97,7 +107,7 @@
                 <img id="player-img" class="w-24 h-24 sm:w-32 sm:h-32 battle-pokemon" src="" alt="Player Pokemon">
                 <div>
                     <h2 id="player-name" class="text-xl font-bold"></h2>
-                    <div class="w-48 bg-gray-300 rounded-full h-5 border-2 border-gray-400">
+                    <div class="w-36 sm:w-48 bg-gray-300 rounded-full h-5 border-2 border-gray-400">
                         <div id="player-hp" class="bg-green-500 h-full rounded-full text-xs text-white text-center font-bold" style="width: 100%;">HP</div>
                     </div>
                 </div>
@@ -182,7 +192,8 @@
     </div>
 
     <!-- 배경음악(BGM) 추가 -->
-    <audio id="bgm" src="bgm.mp3" loop></audio>
+    <audio id="bgm-battle" src="bgm.mp3" loop></audio>
+    <audio id="bgm-quiz" src="bgm2.mp3" loop></audio>
 
     <script>
         // --- 데이터 설정 ---
@@ -439,6 +450,11 @@
             document.getElementById('quiz-pokemon-img').src = playerPokemon.img;
             document.getElementById('quiz-pokemon-name').textContent = playerPokemon.name;
             
+            const bgmBattle = document.getElementById('bgm-battle');
+            const bgmQuiz = document.getElementById('bgm-quiz');
+            bgmBattle.pause();
+            bgmQuiz.play().catch(e => console.log("Quiz BGM failed to play:", e));
+
             // 현재 스테이지에 맞는 퀴즈를 master 목록에서 가져옴
             const startIndex = currentStage * QUESTIONS_PER_STAGE;
             shuffledQuizzes = masterShuffledQuizzes.slice(startIndex, startIndex + QUESTIONS_PER_STAGE);
@@ -626,10 +642,11 @@
         }
 
         function startBattle() {
-            const bgm = document.getElementById('bgm');
-            if (bgm.paused) {
-                bgm.play().catch(e => console.log("BGM 재생 실패:", e));
-            }
+            const bgmBattle = document.getElementById('bgm-battle');
+            const bgmQuiz = document.getElementById('bgm-quiz');
+            bgmQuiz.pause();
+            bgmBattle.play().catch(e => console.log("Battle BGM failed to play:", e));
+
             isBattling = true;
             opponentPokemon = { ...gameStages[currentStage].opponent, statusEffects: {}, statModifiers: { attack: 0 } };
             
@@ -834,9 +851,9 @@
         }
 
         function endBattle(isVictory) {
-            const bgm = document.getElementById('bgm');
-            bgm.pause();
-            bgm.currentTime = 0;
+            const bgmBattle = document.getElementById('bgm-battle');
+            bgmBattle.pause();
+            bgmBattle.currentTime = 0;
             isBattling = false;
             setTimeout(() => {
                 if (isVictory) {
@@ -857,7 +874,7 @@
                         `;
                         showModal('stageClear');
                     } else {
-                        document.getElementById('result-title').textContent = '🏆 최종 승리!  ';
+                        document.getElementById('result-title').textContent = '🏆 최종 승리! 🏆';
                         document.getElementById('result-message').textContent = '모든 스테이지를 클리어했습니다! 당신은 진정한 AI 윤리 포켓몬 마스터!';
                         showModal('result');
                     }
@@ -870,13 +887,37 @@
         }
 
         function resetGame() {
-            const bgm = document.getElementById('bgm');
-            bgm.pause();
-            bgm.currentTime = 0;
+            const bgmBattle = document.getElementById('bgm-battle');
+            const bgmQuiz = document.getElementById('bgm-quiz');
+            bgmBattle.pause();
+            bgmBattle.currentTime = 0;
+            bgmQuiz.pause();
+            bgmQuiz.currentTime = 0;
             hideModals();
             showScreen('selection');
             initSelectionScreen();
         }
+        
+        // --- BGM 제어 ---
+        const bgmBattle = document.getElementById('bgm-battle');
+        const bgmQuiz = document.getElementById('bgm-quiz');
+        const volumeControl = document.getElementById('volume-control');
+        const soundOnIcon = document.getElementById('sound-on-icon');
+        const soundOffIcon = document.getElementById('sound-off-icon');
+        let isMuted = false;
+
+        bgmBattle.volume = 0.5;
+        bgmQuiz.volume = 0.5;
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            bgmBattle.muted = isMuted;
+            bgmQuiz.muted = isMuted;
+            soundOnIcon.classList.toggle('hidden', isMuted);
+            soundOffIcon.classList.toggle('hidden', !isMuted);
+        }
+
+        volumeControl.addEventListener('click', toggleMute);
 
         document.getElementById('play-again-button').addEventListener('click', resetGame);
         document.getElementById('next-stage-button').addEventListener('click', () => {
@@ -897,4 +938,3 @@
     </script>
 </body>
 </html>
- 
