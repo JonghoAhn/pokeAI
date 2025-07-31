@@ -50,7 +50,7 @@ const ALL_QUIZZES = [
 ];
         
 const DEFAULT_SKILL = { name: '몸통박치기', power: 20, type: '노말' };
-const STRUGGLE_SKILL = { name: '발버둥치기', power: 20, type: '노말', isStruggle: true };
+const STRUGGLE_SKILL = { name: '발버둥치기', power: 50, type: '노말', isStruggle: true };
 
 const POKEMON_LEARNSETS = {
     'pikachu': ['10만볼트', '번개', '전광석화', '이판사판태클'], 'bulbasaur': ['잎날가르기', '솔라빔', '오물폭탄', '몸통박치기'], 'charmander': ['화염방사', '불대문자', '드래곤크루', '깨물어부수기'], 'squirtle': ['파도타기', '하이드로펌프', '냉동빔', '깨물어부수기'], 'machamp': ['인파이트', '엄청난힘', '스톤샤워', '지진'], 'alakazam': ['사이코키네시스', '미래예지', '섀도볼', '칼춤'], 'gengar': ['섀도볼', '병상첨병', '오물폭탄', '사이코키네시스'], 'gyarados': ['파도타기', '하이드로펌프', '폭풍', '깨물어부수기'], 'snorlax': ['이판사판태클', '파괴광선', '지진', '깨물어부수기'], 'dragonite': ['드래곤크루', '용성군', '폭풍', '파괴광선'], 'metagross': ['코멧펀치', '아이언헤드', '사이코키네시스', '지진'], 'lucario': ['인파이트', '코멧펀치', '아이언헤드', '섀도볼']

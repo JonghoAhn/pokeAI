@@ -1,5 +1,4 @@
 // --- Game Variables ---
-// These variables manage the state of the game.
 let playerPokemon = {}, opponentPokemon = {}, currentQuestionIndex = 0, learnedSkills = [], isBattling = false;
 let masterShuffledQuizzes = [], shuffledQuizzes = [], currentStage = 0, gameStages = [], battleSkills = [];
 let playerInventory = { potion: 0 };
@@ -8,13 +7,11 @@ let correctAnswersThisStage = 0;
 let battleLogTimeout;
 
 // --- DOM Elements ---
-// Caching DOM elements for quick access.
 const screens = { start: document.getElementById('start-screen'), selection: document.getElementById('selection-screen'), quiz: document.getElementById('quiz-screen'), battle: document.getElementById('battle-screen') };
 const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal'), record: document.getElementById('record-modal'), hallOfFame: document.getElementById('hall-of-fame-modal') };
 const bgm = { battle: document.getElementById('bgm-battle'), quiz: document.getElementById('bgm-quiz') };
 
 // --- Screen & Modal Management ---
-// Functions to show/hide different parts of the UI.
 function showScreen(screenName) {
     Object.values(screens).forEach(screen => screen.classList.remove('active'));
     screens[screenName].classList.add('active');
@@ -37,7 +34,6 @@ function shuffleArray(array) {
 }
 
 // --- Game Setup ---
-// Functions to initialize the game and stages.
 function calculateMatchupScore(playerTypes, opponentTypes) {
     let opponentEffectiveness = 1;
     opponentTypes.forEach(oType => {
@@ -53,18 +49,13 @@ function generateStages(player) {
     let stages = [];
     const legendary_ids = ['articuno', 'zapdos', 'moltres', 'tyranitar'];
     const easy_ids = ['rattata', 'pidgey', 'clefairy'];
-
+    const normalPool = OPPONENT_POOL.filter(p => !legendary_ids.includes(p.id) && !easy_ids.includes(p.id));
     const easyPool = OPPONENT_POOL.filter(p => easy_ids.includes(p.id));
     const legendaryPool = OPPONENT_POOL.filter(p => legendary_ids.includes(p.id));
-    let normalPool = OPPONENT_POOL.filter(p => !legendary_ids.includes(p.id) && !easy_ids.includes(p.id));
     let usedOpponentIds = new Set();
-
     const opponentsWithScores = normalPool.map(opp => ({...opp, score: calculateMatchupScore(player.types, opp.types)}));
-    const stageDifficultyFilters = [
-        opp => opp.score <= 1, opp => opp.score <= 1, opp => opp.score > 1 && opp.score < 4, opp => opp.score > 1 && opp.score < 4, 
-    ];
+    const stageDifficultyFilters = [ opp => opp.score <= 1, opp => opp.score <= 1, opp => opp.score > 1 && opp.score < 4, opp => opp.score > 1 && opp.score < 4, ];
     const stageNames = ["초보 트레이너", "두번째 트레이너", "체육관 관장", "엘리트 트레이너", "사천왕", "라이벌", "챔피언"];
-
     for (let i = 0; i < 2; i++) {
         let pool = easyPool.filter(opp => !usedOpponentIds.has(opp.id));
         if (pool.length === 0) pool = easyPool;
@@ -89,7 +80,6 @@ function initSelectionScreen() {
     const container = document.getElementById('pokemon-options');
     container.innerHTML = '';
     const pokemonKeys = Object.keys(POKEMONS);
-    
     for (let i = 0; i < 9 && i < pokemonKeys.length; i++) {
         const key = pokemonKeys[i];
         const pokemon = POKEMONS[key];
@@ -110,7 +100,7 @@ function selectPokemon(key) {
     let selectedKey = key === 'random' ? Object.keys(POKEMONS)[Math.floor(Math.random() * Object.keys(POKEMONS).length)] : key;
     const basePokemon = POKEMONS[selectedKey];
     playerPokemon = { ...basePokemon, id: selectedKey, maxHp: basePokemon.hp, hp: basePokemon.hp, statusEffects: {}, statModifiers: { attack: 0, defense: 0 } };
-    learnedSkills = [];
+    learnedSkills = [DEFAULT_SKILL]; // Start with default skill
     playerInventory = { potion: 1 };
     currentStage = 0;
     gameStages = generateStages(playerPokemon);
@@ -119,7 +109,6 @@ function selectPokemon(key) {
 }
 
 // --- Game Flow ---
-// Functions that control the progression of the game from quiz to battle.
 function startStage() {
     hideModals();
     correctAnswersThisStage = 0;
@@ -128,11 +117,9 @@ function startStage() {
     playerPokemon.statModifiers = { attack: 0, defense: 0 };
     document.getElementById('quiz-pokemon-img').src = playerPokemon.img;
     document.getElementById('quiz-pokemon-name').textContent = playerPokemon.name;
-    
     bgm.battle.pause();
     bgm.quiz.currentTime = 0;
     bgm.quiz.play().catch(e => {});
-
     const startIndex = currentStage * QUESTIONS_PER_STAGE;
     shuffledQuizzes = masterShuffledQuizzes.slice(startIndex, startIndex + QUESTIONS_PER_STAGE);
     currentQuestionIndex = 0;
@@ -154,10 +141,7 @@ function updateSkillProgress() {
 
 function loadQuestion() {
     const quiz = shuffledQuizzes[currentQuestionIndex];
-    if (!quiz) {
-        startBattle(); // No more quizzes, proceed to battle
-        return;
-    }
+    if (!quiz) { startBattle(); return; }
     document.getElementById('question-number').textContent = `퀴즈 ${currentQuestionIndex + 1} / ${QUESTIONS_PER_STAGE}`;
     document.getElementById('question-text').textContent = quiz.question;
     const container = document.getElementById('answer-options');
@@ -194,7 +178,7 @@ function proceedAfterExplanation() {
     currentQuestionIndex++;
     if (currentQuestionIndex >= QUESTIONS_PER_STAGE) {
         if (correctAnswersThisStage > 0) {
-            showSkillSelection();
+            showSkillSelection(correctAnswersThisStage);
         } else {
             const feedback = document.getElementById('feedback-message');
             feedback.textContent = "기술을 배우지 못했습니다. 배틀을 시작합니다!";
@@ -206,23 +190,36 @@ function proceedAfterExplanation() {
 }
 
 // --- Skill Learning ---
-// Functions related to learning and forgetting skills.
-function showSkillSelection() {
+function showSkillSelection(numberOfCorrectAnswers) {
     const choicesContainer = document.getElementById('skill-choices');
     choicesContainer.innerHTML = '';
     const learnset = POKEMON_LEARNSETS[playerPokemon.id] || [];
     let potentialSkillNames = [...new Set([...learnset, ...SKILLS['노말'].filter(s => s.power && s.power < 40).map(s => s.name)])];
     let availableSkills = potentialSkillNames.map(name => Object.values(SKILLS).flat().find(s => s.name === name)).filter(skill => skill && !learnedSkills.some(ls => ls.name === skill.name));
     if (availableSkills.length === 0) { startBattle(); return; }
-    shuffleArray(availableSkills).slice(0, 2).forEach(skill => {
-        const button = document.createElement('button');
-        const skillDesc = skill.description || (skill.power ? `위력: ${skill.power}` : '효과');
-        button.className = 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow transition';
-        button.innerHTML = `<strong>${skill.name}</strong> <br><span class="text-sm">${skill.type} / ${skillDesc}</span>`;
-        button.onclick = () => learnSkill(skill);
-        choicesContainer.appendChild(button);
-    });
-    showModal('skillSelection');
+
+    const numberOfChoices = numberOfCorrectAnswers === 2 ? 2 : 1;
+    let selectedForChoice = shuffleArray(availableSkills).slice(0, numberOfChoices);
+
+    if (numberOfChoices === 1 && selectedForChoice.length > 0) {
+        // Automatically learn the single skill
+        const skillToLearn = selectedForChoice[0];
+        const feedback = document.getElementById('feedback-message');
+        feedback.textContent = `${skillToLearn.name}을(를) 배웠다!`;
+        setTimeout(() => { feedback.textContent = ""; learnSkill(skillToLearn); }, 2000);
+    } else {
+        // Show modal for choice
+        document.getElementById('skill-selection-modal').querySelector('p').textContent = `퀴즈 ${numberOfCorrectAnswers}개 정답! 배울 기술을 하나 선택하세요.`;
+        selectedForChoice.forEach(skill => {
+            const button = document.createElement('button');
+            const skillDesc = skill.description || (skill.power ? `위력: ${skill.power}` : '효과');
+            button.className = 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow transition';
+            button.innerHTML = `<strong>${skill.name}</strong> <br><span class="text-sm">${skill.type} / ${skillDesc}</span>`;
+            button.onclick = () => learnSkill(skill);
+            choicesContainer.appendChild(button);
+        });
+        showModal('skillSelection');
+    }
 }
 
 function learnSkill(newSkill) {
@@ -252,7 +249,6 @@ function replaceSkill(index, newSkill) {
 }
 
 // --- Battle Logic ---
-// All functions related to the battle sequence.
 function startBattle() {
     hideModals();
     isBattling = true;
@@ -260,11 +256,13 @@ function startBattle() {
     bgm.battle.currentTime = 0;
     bgm.battle.play().catch(e => {});
 
+    // Initialize skills with PP for the current battle
+    battleSkills = learnedSkills.map(skill => ({ ...skill, pp: 3 }));
+
     const stageInfo = gameStages[currentStage];
     opponentPokemon = JSON.parse(JSON.stringify(stageInfo.opponent));
     opponentPokemon.statModifiers = { attack: 0, defense: 0 };
     opponentPokemon.statusEffects = {};
-    battleSkills = learnedSkills.length > 0 ? learnedSkills : [DEFAULT_SKILL];
     document.getElementById('stage-title-battle').textContent = stageInfo.name;
     updateBattleUI();
     showScreen('battle');
@@ -272,43 +270,54 @@ function startBattle() {
 }
 
 function updateBattleUI() {
-    // Player UI
-    document.getElementById('player-name').textContent = playerPokemon.name;
-    document.getElementById('player-img').src = playerPokemon.img;
+    // Player & Opponent HP Bars
     const playerHpBar = document.getElementById('player-hp');
     const playerHpPercent = (playerPokemon.hp / playerPokemon.maxHp) * 100;
     playerHpBar.style.width = `${playerHpPercent}%`;
     playerHpBar.textContent = `${Math.ceil(playerPokemon.hp)} / ${playerPokemon.maxHp}`;
     playerHpBar.className = `h-full rounded-full text-xs text-white text-center font-bold transition-all duration-500 ${playerHpPercent > 50 ? 'bg-green-500' : playerHpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500'}`;
+    document.getElementById('player-name').textContent = playerPokemon.name;
+    document.getElementById('player-img').src = playerPokemon.img;
     
-    // Opponent UI
-    document.getElementById('opponent-name').textContent = opponentPokemon.name;
-    document.getElementById('opponent-img').src = opponentPokemon.img;
     const opponentHpBar = document.getElementById('opponent-hp');
     const opponentHpPercent = (opponentPokemon.hp / opponentPokemon.maxHp) * 100;
     opponentHpBar.style.width = `${opponentHpPercent}%`;
     opponentHpBar.textContent = `HP`;
     opponentHpBar.className = `h-full rounded-full text-xs text-white text-center font-bold transition-all duration-500 ${opponentHpPercent > 50 ? 'bg-green-500' : opponentHpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500'}`;
+    document.getElementById('opponent-name').textContent = opponentPokemon.name;
+    document.getElementById('opponent-img').src = opponentPokemon.img;
 
-    // Skill Buttons
+    // Skill & Item Buttons
     const skillButtonsContainer = document.getElementById('skill-buttons');
     skillButtonsContainer.innerHTML = '';
-    const skillsToDisplay = battleSkills.length > 0 ? battleSkills : [STRUGGLE_SKILL];
-    skillsToDisplay.forEach((skill, index) => {
-        const button = document.createElement('button');
-        button.className = `bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-2 rounded-lg shadow-sm transition text-xs sm:text-sm`;
-        button.textContent = skill.name;
-        button.onclick = () => playerAttack(index);
-        skillButtonsContainer.appendChild(button);
-    });
+    const canUseAnySkill = battleSkills.some(skill => skill.pp > 0);
 
-    // Item Buttons
+    if (canUseAnySkill) {
+        battleSkills.forEach((skill, index) => {
+            const button = document.createElement('button');
+            button.className = `bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-2 rounded-lg shadow-sm transition text-xs sm:text-sm`;
+            button.innerHTML = `${skill.name}<br>(위력:${skill.power} / PP:${skill.pp})`;
+            button.disabled = skill.pp <= 0;
+            if (button.disabled) button.classList.add('opacity-50', 'cursor-not-allowed');
+            button.onclick = () => playerAttack(index);
+            skillButtonsContainer.appendChild(button);
+        });
+    } else {
+        // Show Struggle button if no PP left
+        const struggleButton = document.createElement('button');
+        struggleButton.className = `bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded-lg shadow-sm transition text-xs sm:text-sm col-span-2`;
+        struggleButton.innerHTML = `${STRUGGLE_SKILL.name}<br>(위력:${STRUGGLE_SKILL.power})`;
+        struggleButton.onclick = () => playerAttack(-1); // Use -1 to signify Struggle
+        skillButtonsContainer.appendChild(struggleButton);
+    }
+    
     const itemButtonsContainer = document.getElementById('item-buttons');
     itemButtonsContainer.innerHTML = '';
     const potionButton = document.createElement('button');
     potionButton.className = 'bg-green-200 hover:bg-green-300 text-green-800 font-bold py-2 px-2 rounded-lg shadow-sm transition text-xs sm:text-sm';
     potionButton.textContent = `상처약 (${playerInventory.potion})`;
     potionButton.disabled = playerInventory.potion <= 0 || playerPokemon.hp === playerPokemon.maxHp;
+    if(potionButton.disabled) potionButton.classList.add('opacity-50');
     potionButton.onclick = usePotion;
     itemButtonsContainer.appendChild(potionButton);
 }
@@ -345,6 +354,13 @@ function performAttack(attacker, defender, skill, onComplete) {
         battleLogUpdate(`${attacker.name}의 ${skill.name} 공격!`);
         const { damage, effectivenessMessage } = calculateDamage(attacker, defender, skill);
         defender.hp = Math.max(0, defender.hp - damage);
+
+        if (skill.isStruggle) {
+            const recoilDamage = Math.floor(damage / 4);
+            attacker.hp = Math.max(0, attacker.hp - recoilDamage);
+            battleLogUpdate(`${attacker.name}은(는) 반동 데미지를 입었다!`, 2000);
+        }
+
         if (skill.effect) applyEffect(skill.effect, attacker, defender);
         defenderImg.classList.add('shake');
         updateBattleUI();
@@ -359,9 +375,22 @@ function performAttack(attacker, defender, skill, onComplete) {
 function playerAttack(skillIndex) {
     if (!isBattling) return;
     isBattling = false;
-    const skill = battleSkills.length > 0 ? battleSkills[skillIndex] : STRUGGLE_SKILL;
+    
+    const isStruggle = skillIndex === -1;
+    const skill = isStruggle ? STRUGGLE_SKILL : battleSkills[skillIndex];
+
+    if (!isStruggle) {
+        if (skill.pp <= 0) {
+            battleLogUpdate("PP가 부족하여 기술을 사용할 수 없다!");
+            isBattling = true;
+            return;
+        }
+        skill.pp--;
+    }
+
     performAttack(playerPokemon, opponentPokemon, skill, () => {
         if (opponentPokemon.hp <= 0) winBattle();
+        else if (playerPokemon.hp <= 0) loseBattle();
         else opponentAttack();
     });
 }
@@ -370,7 +399,10 @@ function opponentAttack() {
     const skill = opponentPokemon.skills[Math.floor(Math.random() * opponentPokemon.skills.length)];
     performAttack(opponentPokemon, playerPokemon, skill, () => {
         if (playerPokemon.hp <= 0) loseBattle();
-        else isBattling = true;
+        else {
+            isBattling = true;
+            updateBattleUI(); // Update UI to re-enable buttons
+        }
     });
 }
 
@@ -399,7 +431,6 @@ function applyEffect(effect, attacker, defender) {
 }
 
 // --- Game End and Records ---
-// Functions for winning/losing and saving scores.
 function winBattle() {
     isBattling = false;
     currentStage++;
@@ -455,7 +486,6 @@ function showHallOfFame() {
 }
 
 // --- Event Listeners ---
-// Sets up all the interactive elements of the game.
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('start-game-button').addEventListener('click', () => { initSelectionScreen(); showScreen('selection'); });
     document.getElementById('next-question-button').addEventListener('click', proceedAfterExplanation);
