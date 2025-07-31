@@ -1,18 +1,20 @@
-// --- 게임 변수 설정 ---
+// --- Game Variables ---
+// These variables manage the state of the game.
 let playerPokemon = {}, opponentPokemon = {}, currentQuestionIndex = 0, learnedSkills = [], isBattling = false;
 let masterShuffledQuizzes = [], shuffledQuizzes = [], currentStage = 0, gameStages = [], battleSkills = [];
-let isAnswerCorrect = false;
 let playerInventory = { potion: 0 };
 const QUESTIONS_PER_STAGE = 2;
 let correctAnswersThisStage = 0;
 let battleLogTimeout;
 
-// --- DOM 요소 ---
+// --- DOM Elements ---
+// Caching DOM elements for quick access.
 const screens = { start: document.getElementById('start-screen'), selection: document.getElementById('selection-screen'), quiz: document.getElementById('quiz-screen'), battle: document.getElementById('battle-screen') };
 const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal'), record: document.getElementById('record-modal'), hallOfFame: document.getElementById('hall-of-fame-modal') };
 const bgm = { battle: document.getElementById('bgm-battle'), quiz: document.getElementById('bgm-quiz') };
 
-// --- 화면 전환 함수 ---
+// --- Screen & Modal Management ---
+// Functions to show/hide different parts of the UI.
 function showScreen(screenName) {
     Object.values(screens).forEach(screen => screen.classList.remove('active'));
     screens[screenName].classList.add('active');
@@ -25,7 +27,7 @@ function hideModals() {
     Object.values(modals).forEach(modal => modal.classList.remove('active'));
 }
 
-// --- 유틸리티 함수 ---
+// --- Utility Functions ---
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -34,7 +36,8 @@ function shuffleArray(array) {
     return array;
 }
 
-// --- 게임 준비 함수 ---
+// --- Game Setup ---
+// Functions to initialize the game and stages.
 function calculateMatchupScore(playerTypes, opponentTypes) {
     let opponentEffectiveness = 1;
     opponentTypes.forEach(oType => {
@@ -58,10 +61,7 @@ function generateStages(player) {
 
     const opponentsWithScores = normalPool.map(opp => ({...opp, score: calculateMatchupScore(player.types, opp.types)}));
     const stageDifficultyFilters = [
-        opp => opp.score <= 1, 
-        opp => opp.score <= 1, 
-        opp => opp.score > 1 && opp.score < 4, 
-        opp => opp.score > 1 && opp.score < 4, 
+        opp => opp.score <= 1, opp => opp.score <= 1, opp => opp.score > 1 && opp.score < 4, opp => opp.score > 1 && opp.score < 4, 
     ];
     const stageNames = ["초보 트레이너", "두번째 트레이너", "체육관 관장", "엘리트 트레이너", "사천왕", "라이벌", "챔피언"];
 
@@ -72,24 +72,18 @@ function generateStages(player) {
         usedOpponentIds.add(selectedOpponent.id);
         stages.push({ name: `Stage ${i + 1}: ${stageNames[i]}`, opponent: selectedOpponent });
     }
-
     for (let i = 0; i < 4; i++) {
         let pool = opponentsWithScores.filter(opp => !usedOpponentIds.has(opp.id));
         let filteredPool = pool.filter(stageDifficultyFilters[i]);
-        if (filteredPool.length === 0) pool = pool.length > 0 ? pool : opponentsWithScores;
-        else pool = filteredPool;
-        
+        pool = filteredPool.length > 0 ? filteredPool : (pool.length > 0 ? pool : opponentsWithScores);
         const selectedOpponent = pool[Math.floor(Math.random() * pool.length)];
         usedOpponentIds.add(selectedOpponent.id);
         stages.push({ name: `Stage ${i + 3}: ${stageNames[i+2]}`, opponent: selectedOpponent });
     }
-    
     const finalBoss = legendaryPool[Math.floor(Math.random() * legendaryPool.length)];
     stages.push({ name: `Stage 7: ${stageNames[6]}`, opponent: finalBoss });
-
     return stages;
 }
-
 
 function initSelectionScreen() {
     const container = document.getElementById('pokemon-options');
@@ -105,7 +99,6 @@ function initSelectionScreen() {
         card.addEventListener('click', () => selectPokemon(key));
         container.appendChild(card);
     }
-
     const randomCard = document.createElement('div');
     randomCard.className = 'pokemon-card cursor-pointer bg-gray-200 p-2 rounded-lg text-center flex flex-col justify-center items-center aspect-square transition transform hover:scale-105';
     randomCard.innerHTML = `<div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-1 flex items-center justify-center text-5xl font-bold text-gray-500">?</div><p class="font-bold text-sm sm:text-base">랜덤</p>`;
@@ -114,11 +107,7 @@ function initSelectionScreen() {
 }
 
 function selectPokemon(key) {
-    let selectedKey = key;
-    if (key === 'random') {
-        const keys = Object.keys(POKEMONS);
-        selectedKey = keys[Math.floor(Math.random() * keys.length)];
-    }
+    let selectedKey = key === 'random' ? Object.keys(POKEMONS)[Math.floor(Math.random() * Object.keys(POKEMONS).length)] : key;
     const basePokemon = POKEMONS[selectedKey];
     playerPokemon = { ...basePokemon, id: selectedKey, maxHp: basePokemon.hp, hp: basePokemon.hp, statusEffects: {}, statModifiers: { attack: 0, defense: 0 } };
     learnedSkills = [];
@@ -129,7 +118,8 @@ function selectPokemon(key) {
     startStage();
 }
 
-// --- 게임 진행 함수 ---
+// --- Game Flow ---
+// Functions that control the progression of the game from quiz to battle.
 function startStage() {
     hideModals();
     correctAnswersThisStage = 0;
@@ -141,7 +131,7 @@ function startStage() {
     
     bgm.battle.pause();
     bgm.quiz.currentTime = 0;
-    bgm.quiz.play().catch(e => console.error("BGM play failed:", e));
+    bgm.quiz.play().catch(e => {});
 
     const startIndex = currentStage * QUESTIONS_PER_STAGE;
     shuffledQuizzes = masterShuffledQuizzes.slice(startIndex, startIndex + QUESTIONS_PER_STAGE);
@@ -165,7 +155,7 @@ function updateSkillProgress() {
 function loadQuestion() {
     const quiz = shuffledQuizzes[currentQuestionIndex];
     if (!quiz) {
-        console.error("Quiz not found for index:", currentQuestionIndex);
+        startBattle(); // No more quizzes, proceed to battle
         return;
     }
     document.getElementById('question-number').textContent = `퀴즈 ${currentQuestionIndex + 1} / ${QUESTIONS_PER_STAGE}`;
@@ -186,9 +176,7 @@ function checkAnswer(selectedOption) {
     document.querySelectorAll('#answer-options button').forEach(btn => btn.disabled = true);
     const quiz = shuffledQuizzes[currentQuestionIndex];
     const title = document.getElementById('explanation-title');
-    isAnswerCorrect = selectedOption === quiz.answer;
-    
-    if (isAnswerCorrect) {
+    if (selectedOption === quiz.answer) {
         correctAnswersThisStage++;
         title.textContent = '✅ 정답입니다!';
         title.className = 'text-3xl font-bold mb-4 text-green-600';
@@ -210,37 +198,23 @@ function proceedAfterExplanation() {
         } else {
             const feedback = document.getElementById('feedback-message');
             feedback.textContent = "기술을 배우지 못했습니다. 배틀을 시작합니다!";
-            setTimeout(() => {
-                feedback.textContent = "";
-                startBattle();
-            }, 1500);
+            setTimeout(() => { feedback.textContent = ""; startBattle(); }, 1500);
         }
     } else {
         loadQuestion();
     }
 }
 
-// --- 기술 습득 관련 함수 ---
+// --- Skill Learning ---
+// Functions related to learning and forgetting skills.
 function showSkillSelection() {
     const choicesContainer = document.getElementById('skill-choices');
     choicesContainer.innerHTML = '';
     const learnset = POKEMON_LEARNSETS[playerPokemon.id] || [];
-    let potentialSkillNames = [...learnset];
-    const normalSkills = SKILLS['노말'].filter(s => s.power && s.power < 40).map(s => s.name);
-    potentialSkillNames.push(...normalSkills);
-    potentialSkillNames = [...new Set(potentialSkillNames)];
-
-    let availableSkills = potentialSkillNames
-        .map(name => Object.values(SKILLS).flat().find(s => s.name === name))
-        .filter(skill => skill && !learnedSkills.some(ls => ls.name === skill.name));
-
-    if (availableSkills.length === 0) {
-        startBattle();
-        return;
-    }
-
-    let selectedForChoice = shuffleArray([...availableSkills]).slice(0, 2);
-    selectedForChoice.forEach(skill => {
+    let potentialSkillNames = [...new Set([...learnset, ...SKILLS['노말'].filter(s => s.power && s.power < 40).map(s => s.name)])];
+    let availableSkills = potentialSkillNames.map(name => Object.values(SKILLS).flat().find(s => s.name === name)).filter(skill => skill && !learnedSkills.some(ls => ls.name === skill.name));
+    if (availableSkills.length === 0) { startBattle(); return; }
+    shuffleArray(availableSkills).slice(0, 2).forEach(skill => {
         const button = document.createElement('button');
         const skillDesc = skill.description || (skill.power ? `위력: ${skill.power}` : '효과');
         button.className = 'bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow transition';
@@ -253,12 +227,8 @@ function showSkillSelection() {
 
 function learnSkill(newSkill) {
     hideModals();
-    if (learnedSkills.length >= 4) {
-        showForgetSkillModal(newSkill);
-    } else {
-        learnedSkills.push(newSkill);
-        startBattle();
-    }
+    if (learnedSkills.length >= 4) showForgetSkillModal(newSkill);
+    else { learnedSkills.push(newSkill); startBattle(); }
 }
 
 function showForgetSkillModal(newSkill) {
@@ -281,21 +251,20 @@ function replaceSkill(index, newSkill) {
     startBattle();
 }
 
-// --- 배틀 관련 함수 ---
+// --- Battle Logic ---
+// All functions related to the battle sequence.
 function startBattle() {
     hideModals();
     isBattling = true;
     bgm.quiz.pause();
     bgm.battle.currentTime = 0;
-    bgm.battle.play().catch(e => console.error("BGM play failed:", e));
+    bgm.battle.play().catch(e => {});
 
     const stageInfo = gameStages[currentStage];
-    opponentPokemon = JSON.parse(JSON.stringify(stageInfo.opponent)); // Deep copy
+    opponentPokemon = JSON.parse(JSON.stringify(stageInfo.opponent));
     opponentPokemon.statModifiers = { attack: 0, defense: 0 };
     opponentPokemon.statusEffects = {};
-
     battleSkills = learnedSkills.length > 0 ? learnedSkills : [DEFAULT_SKILL];
-
     document.getElementById('stage-title-battle').textContent = stageInfo.name;
     updateBattleUI();
     showScreen('battle');
@@ -303,7 +272,7 @@ function startBattle() {
 }
 
 function updateBattleUI() {
-    // Player
+    // Player UI
     document.getElementById('player-name').textContent = playerPokemon.name;
     document.getElementById('player-img').src = playerPokemon.img;
     const playerHpBar = document.getElementById('player-hp');
@@ -312,7 +281,7 @@ function updateBattleUI() {
     playerHpBar.textContent = `${Math.ceil(playerPokemon.hp)} / ${playerPokemon.maxHp}`;
     playerHpBar.className = `h-full rounded-full text-xs text-white text-center font-bold transition-all duration-500 ${playerHpPercent > 50 ? 'bg-green-500' : playerHpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500'}`;
     
-    // Opponent
+    // Opponent UI
     document.getElementById('opponent-name').textContent = opponentPokemon.name;
     document.getElementById('opponent-img').src = opponentPokemon.img;
     const opponentHpBar = document.getElementById('opponent-hp');
@@ -321,7 +290,7 @@ function updateBattleUI() {
     opponentHpBar.textContent = `HP`;
     opponentHpBar.className = `h-full rounded-full text-xs text-white text-center font-bold transition-all duration-500 ${opponentHpPercent > 50 ? 'bg-green-500' : opponentHpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500'}`;
 
-    // Skill buttons
+    // Skill Buttons
     const skillButtonsContainer = document.getElementById('skill-buttons');
     skillButtonsContainer.innerHTML = '';
     const skillsToDisplay = battleSkills.length > 0 ? battleSkills : [STRUGGLE_SKILL];
@@ -333,7 +302,7 @@ function updateBattleUI() {
         skillButtonsContainer.appendChild(button);
     });
 
-    // Item buttons
+    // Item Buttons
     const itemButtonsContainer = document.getElementById('item-buttons');
     itemButtonsContainer.innerHTML = '';
     const potionButton = document.createElement('button');
@@ -348,110 +317,61 @@ function battleLogUpdate(message, duration = 1500) {
     const log = document.getElementById('battle-log');
     log.textContent = message;
     clearTimeout(battleLogTimeout);
-    battleLogTimeout = setTimeout(() => {
-        log.textContent = '무엇을 할까?';
-    }, duration);
+    battleLogTimeout = setTimeout(() => { log.textContent = '무엇을 할까?'; }, duration);
 }
 
 function calculateDamage(attacker, defender, skill) {
     if (!skill.power) return { damage: 0, effectivenessMessage: '' };
     let effectiveness = 1;
-    defender.types.forEach(defType => {
-        effectiveness *= TYPE_CHART[skill.type]?.[defType] ?? 1;
-    });
-    
-    const baseDamage = skill.power * (Math.random() * 0.25 + 0.85); // 85% ~ 110%
-    const damage = Math.floor(baseDamage * effectiveness);
-    
-    let effectivenessMessage = '';
-    if (effectiveness > 1) effectivenessMessage = "효과가 굉장했다!";
-    if (effectiveness < 1 && effectiveness > 0) effectivenessMessage = "효과가 별로인 듯하다...";
-    if (effectiveness === 0) effectivenessMessage = "효과가 없는 것 같다...";
-
+    defender.types.forEach(defType => { effectiveness *= TYPE_CHART[skill.type]?.[defType] ?? 1; });
+    const damage = Math.floor(skill.power * (Math.random() * 0.25 + 0.85) * effectiveness);
+    let effectivenessMessage = effectiveness > 1 ? "효과가 굉장했다!" : (effectiveness < 1 && effectiveness > 0 ? "효과가 별로인 듯하다..." : (effectiveness === 0 ? "효과가 없는 것 같다..." : ''));
     return { damage, effectivenessMessage };
+}
+
+function performAttack(attacker, defender, skill, onComplete) {
+    const attackerImg = attacker === playerPokemon ? document.getElementById('player-img') : document.getElementById('opponent-img');
+    const defenderImg = defender === playerPokemon ? document.getElementById('player-img') : document.getElementById('opponent-img');
+
+    if (attacker.statusEffects.paralysis && Math.random() < 0.25) {
+        battleLogUpdate(`${attacker.name}은(는) 마비되어 움직일 수 없다!`);
+        setTimeout(onComplete, 1500);
+        return;
+    }
+
+    attackerImg.classList.add('attack-animation');
+    setTimeout(() => {
+        attackerImg.classList.remove('attack-animation');
+        battleLogUpdate(`${attacker.name}의 ${skill.name} 공격!`);
+        const { damage, effectivenessMessage } = calculateDamage(attacker, defender, skill);
+        defender.hp = Math.max(0, defender.hp - damage);
+        if (skill.effect) applyEffect(skill.effect, attacker, defender);
+        defenderImg.classList.add('shake');
+        updateBattleUI();
+        setTimeout(() => {
+            defenderImg.classList.remove('shake');
+            if (effectivenessMessage) battleLogUpdate(effectivenessMessage);
+            setTimeout(onComplete, 1000);
+        }, 500);
+    }, 500);
 }
 
 function playerAttack(skillIndex) {
     if (!isBattling) return;
+    isBattling = false;
     const skill = battleSkills.length > 0 ? battleSkills[skillIndex] : STRUGGLE_SKILL;
-    
-    // 마비 체크
-    if (playerPokemon.statusEffects.paralysis && Math.random() < 0.25) {
-        battleLogUpdate(`${playerPokemon.name}은(는) 마비되어 움직일 수 없다!`);
-        setTimeout(opponentAttack, 1500);
-        return;
-    }
-    
-    isBattling = false; // Prevent multiple attacks
-    document.getElementById('player-img').classList.add('attack-animation');
-    
-    setTimeout(() => {
-        document.getElementById('player-img').classList.remove('attack-animation');
-        battleLogUpdate(`${playerPokemon.name}의 ${skill.name} 공격!`);
-        
-        // 데미지 계산 및 적용
-        const { damage, effectivenessMessage } = calculateDamage(playerPokemon, opponentPokemon, skill);
-        opponentPokemon.hp = Math.max(0, opponentPokemon.hp - damage);
-        
-        // 효과 적용
-        if(skill.effect) applyEffect(skill.effect, playerPokemon, opponentPokemon);
-
-        document.getElementById('opponent-img').classList.add('shake');
-        updateBattleUI();
-        
-        setTimeout(() => {
-            document.getElementById('opponent-img').classList.remove('shake');
-            if (effectivenessMessage) battleLogUpdate(effectivenessMessage);
-
-            setTimeout(() => {
-                if (opponentPokemon.hp <= 0) {
-                    winBattle();
-                } else {
-                    opponentAttack();
-                }
-            }, 1000);
-        }, 500);
-    }, 500);
+    performAttack(playerPokemon, opponentPokemon, skill, () => {
+        if (opponentPokemon.hp <= 0) winBattle();
+        else opponentAttack();
+    });
 }
 
 function opponentAttack() {
-    if (opponentPokemon.hp <= 0) return;
     const skill = opponentPokemon.skills[Math.floor(Math.random() * opponentPokemon.skills.length)];
-    
-    // 마비 체크
-    if (opponentPokemon.statusEffects.paralysis && Math.random() < 0.25) {
-        battleLogUpdate(`${opponentPokemon.name}은(는) 마비되어 움직일 수 없다!`);
-        setTimeout(() => isBattling = true, 1500); // 플레이어 턴으로
-        return;
-    }
-
-    document.getElementById('opponent-img').classList.add('attack-animation');
-
-    setTimeout(() => {
-        document.getElementById('opponent-img').classList.remove('attack-animation');
-        battleLogUpdate(`${opponentPokemon.name}의 ${skill.name} 공격!`);
-        
-        const { damage, effectivenessMessage } = calculateDamage(opponentPokemon, playerPokemon, skill);
-        playerPokemon.hp = Math.max(0, playerPokemon.hp - damage);
-
-        if(skill.effect) applyEffect(skill.effect, opponentPokemon, playerPokemon);
-
-        document.getElementById('player-img').classList.add('shake');
-        updateBattleUI();
-
-        setTimeout(() => {
-            document.getElementById('player-img').classList.remove('shake');
-            if (effectivenessMessage) battleLogUpdate(effectivenessMessage);
-
-            setTimeout(() => {
-                if (playerPokemon.hp <= 0) {
-                    loseBattle();
-                } else {
-                    isBattling = true; // Re-enable player actions
-                }
-            }, 1000);
-        }, 500);
-    }, 500);
+    performAttack(opponentPokemon, playerPokemon, skill, () => {
+        if (playerPokemon.hp <= 0) loseBattle();
+        else isBattling = true;
+    });
 }
 
 function usePotion() {
@@ -467,30 +387,25 @@ function usePotion() {
 }
 
 function applyEffect(effect, attacker, defender) {
-    if (effect.type === 'status') {
-        if (Math.random() < (effect.chance || 1)) {
-            defender.statusEffects[effect.status] = true;
-            battleLogUpdate(`${defender.name}은(는) ${effect.status === 'paralysis' ? '마비' : '??'} 상태가 되었다!`, 2000);
-        }
+    if (effect.type === 'status' && Math.random() < (effect.chance || 1)) {
+        defender.statusEffects[effect.status] = true;
+        battleLogUpdate(`${defender.name}은(는) ${effect.status === 'paralysis' ? '마비' : ''} 상태가 되었다!`, 2000);
     } else if (effect.type === 'stat') {
         const target = effect.target === 'player' ? attacker : defender;
         target.statModifiers[effect.stat] += effect.change;
         const statName = effect.stat === 'attack' ? '공격' : '방어';
-        const changeMsg = effect.change > 0 ? '올랐다' : '떨어졌다';
-        battleLogUpdate(`${target.name}의 ${statName}이(가) ${changeMsg}!`, 2000);
+        battleLogUpdate(`${target.name}의 ${statName}이(가) ${effect.change > 0 ? '올랐다' : '떨어졌다'}!`, 2000);
     }
 }
 
-
-// --- 게임 결과 처리 ---
+// --- Game End and Records ---
+// Functions for winning/losing and saving scores.
 function winBattle() {
     isBattling = false;
     currentStage++;
-    saveRecord(false); // 중간 저장
-
-    if (currentStage >= gameStages.length) {
-        winGame();
-    } else {
+    saveRecord(false);
+    if (currentStage >= gameStages.length) winGame();
+    else {
         document.getElementById('stage-clear-message').textContent = `다음 상대는 ${gameStages[currentStage].name} 입니다.`;
         showModal('stageClear');
     }
@@ -498,7 +413,7 @@ function winBattle() {
 
 function loseBattle() {
     isBattling = false;
-    saveRecord(false); // 중간 저장
+    saveRecord(false);
     document.getElementById('result-title').textContent = "패배...";
     document.getElementById('result-message').textContent = `아쉽게도 ${opponentPokemon.name}에게 패배했습니다.`;
     showModal('result');
@@ -510,110 +425,64 @@ function winGame() {
     showModal('record');
 }
 
-function resetGame() {
-    location.reload();
-}
+function resetGame() { location.reload(); }
 
-// --- 명예의 전당 ---
 function saveRecord(isFinal = true) {
-    const nickname = document.getElementById('nickname-input').value || '트레이너';
-    const records = JSON.parse(localStorage.getItem('hallOfFame') || '[]');
-    const newRecord = {
-        date: new Date().toLocaleDateString(),
-        nickname: nickname,
-        clearedStages: `Stage ${currentStage}`,
-        pokemon: playerPokemon.name
-    };
-    records.unshift(newRecord);
-    localStorage.setItem('hallOfFame', JSON.stringify(records.slice(0, 20)));
-    
-    if(isFinal) {
-        hideModals();
-        showHallOfFame();
-    }
+    try {
+        const nickname = document.getElementById('nickname-input').value || '트레이너';
+        const records = JSON.parse(localStorage.getItem('hallOfFame') || '[]');
+        const newRecord = { date: new Date().toLocaleDateString(), nickname: nickname, clearedStages: `Stage ${currentStage}`, pokemon: playerPokemon.name };
+        records.unshift(newRecord);
+        localStorage.setItem('hallOfFame', JSON.stringify(records.slice(0, 20)));
+        if (isFinal) { hideModals(); showHallOfFame(); }
+    } catch (e) { console.error("Could not save record to localStorage:", e); }
 }
 
 function showHallOfFame() {
-    const records = JSON.parse(localStorage.getItem('hallOfFame') || '[]');
-    const tbody = document.getElementById('hall-of-fame-body');
-    tbody.innerHTML = '';
-    if (records.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4">아직 기록이 없습니다.</td></tr>';
-    } else {
-        records.forEach(r => {
-            const row = `<tr>
-                <td class="p-2 border-t">${r.date}</td>
-                <td class="p-2 border-t">${r.nickname} (${r.pokemon})</td>
-                <td class="p-2 border-t">${r.clearedStages}</td>
-            </tr>`;
-            tbody.innerHTML += row;
-        });
-    }
+    try {
+        const records = JSON.parse(localStorage.getItem('hallOfFame') || '[]');
+        const tbody = document.getElementById('hall-of-fame-body');
+        tbody.innerHTML = '';
+        if (records.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4">아직 기록이 없습니다.</td></tr>';
+        } else {
+            records.forEach(r => {
+                tbody.innerHTML += `<tr><td class="p-2 border-t">${r.date}</td><td class="p-2 border-t">${r.nickname} (${r.pokemon})</td><td class="p-2 border-t">${r.clearedStages}</td></tr>`;
+            });
+        }
+    } catch (e) { console.error("Could not load records from localStorage:", e); }
     showModal('hallOfFame');
 }
 
-// --- 이벤트 리스너 ---
+// --- Event Listeners ---
+// Sets up all the interactive elements of the game.
 document.addEventListener('DOMContentLoaded', () => {
-    // 게임 시작 버튼
-    document.getElementById('start-game-button').addEventListener('click', () => {
-        initSelectionScreen();
-        showScreen('selection');
-    });
-
-    // 퀴즈 해설 후 '계속하기' 버튼
+    document.getElementById('start-game-button').addEventListener('click', () => { initSelectionScreen(); showScreen('selection'); });
     document.getElementById('next-question-button').addEventListener('click', proceedAfterExplanation);
-    
-    // 스테이지 클리어 후 '다음' 버튼
     document.getElementById('next-stage-button').addEventListener('click', startStage);
-
-    // 게임 종료 후 '다시하기' 버튼
     document.getElementById('play-again-button').addEventListener('click', resetGame);
-    
-    // 기술 잊기 취소 버튼
     document.getElementById('cancel-forget-button').addEventListener('click', startBattle);
-
-    // 명예의 전당 관련
     document.getElementById('hall-of-fame-button').addEventListener('click', showHallOfFame);
     document.getElementById('submit-record-button').addEventListener('click', () => saveRecord(true));
     document.getElementById('close-hof-button').addEventListener('click', hideModals);
-
-    // 타입 상성표 관련
     document.getElementById('type-chart-icon').addEventListener('click', () => showModal('typeChart'));
     document.getElementById('close-type-chart-button').addEventListener('click', hideModals);
 
-    // 볼륨 조절
     const volumeSlider = document.getElementById('volume-slider');
     const soundOnIcon = document.getElementById('sound-on-icon');
     const soundOffIcon = document.getElementById('sound-off-icon');
-
     function setVolume(volume) {
         bgm.battle.volume = volume;
         bgm.quiz.volume = volume;
-        if (volume > 0) {
-            soundOnIcon.classList.remove('hidden');
-            soundOffIcon.classList.add('hidden');
-        } else {
-            soundOnIcon.classList.add('hidden');
-            soundOffIcon.classList.remove('hidden');
-        }
+        soundOnIcon.classList.toggle('hidden', volume <= 0);
+        soundOffIcon.classList.toggle('hidden', volume > 0);
     }
-
     volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
     document.getElementById('volume-control').addEventListener('click', () => {
-        const currentVolume = volumeSlider.value;
-        if (currentVolume > 0) {
-            volumeSlider.value = 0;
-        } else {
-            volumeSlider.value = 0.5;
-        }
-        setVolume(volumeSlider.value);
+        const newVolume = volumeSlider.value > 0 ? 0 : 0.5;
+        volumeSlider.value = newVolume;
+        setVolume(newVolume);
     });
-    
-    // 초기 볼륨 설정
     setVolume(volumeSlider.value);
-});
-
-
-window.onload = () => {
     showScreen('start');
-};
+});
