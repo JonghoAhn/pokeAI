@@ -1,166 +1,71 @@
-html {
-    font-size: 15px;
-}
-
-@media (min-width: 640px) {
-    html {
-        font-size: 16px;
-    }
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body {
-    font-family: 'Jua', sans-serif;
-    background-color: #f0f9ff;
-    -webkit-text-size-adjust: 100%;
+    font-family: 'Pretendard', sans-serif;
 }
 
-/* Make the game container fill the screen height */
-body, html {
-    height: 100%;
-    margin: 0;
-    padding: 0;
+/* 기본 버튼 스타일 */
+.btn-primary {
+    @apply bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1;
 }
-body > .w-full {
-    display: flex;
+
+/* 포켓몬 카드 스타일 */
+.pokemon-card {
+    @apply bg-gray-100 p-4 rounded-lg text-center cursor-pointer transition-all duration-300 shadow-sm hover:shadow-xl hover:bg-yellow-200 transform hover:scale-105;
+}
+.pokemon-card.selected {
+    @apply bg-yellow-400 shadow-xl ring-4 ring-yellow-500;
+}
+
+/* 퀴즈 선택지 스타일 */
+.quiz-option {
+    @apply bg-white border-2 border-gray-300 p-3 rounded-lg text-left cursor-pointer transition-all duration-200 hover:bg-blue-100 hover:border-blue-400;
+}
+.quiz-option.correct {
+    @apply bg-green-200 border-green-500;
+}
+.quiz-option.incorrect {
+    @apply bg-red-200 border-red-500;
+}
+
+/* 화면 전환의 기본 스타일 */
+.screen {
+    display: none;
     flex-direction: column;
-    height: 100%;
-    max-height: 100vh;
-}
-
-.screen { 
-    display: none; 
-    flex-direction: column; 
-    width: 100%; 
+    width: 100%;
     flex-grow: 1; /* Allow screens to fill vertical space */
-}
-.screen.active { display: flex; }
-
-.pokemon-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-.pokemon-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
-.battle-pokemon { transition: transform 0.3s ease-in-out; min-width: 4rem; min-height: 4rem; }
-.modal { display: none; flex-direction: column; }
-.modal.active { display: flex; }
-
-.lunge-animation { animation: lunge 0.5s ease-in-out; }
-.shake { animation: shake-animation 0.4s; }
-
-@keyframes lunge {
-    50% { transform: translate(10px, -10px) scale(1.1); }
-    100% { transform: translate(0, 0) scale(1); }
+    justify-content: space-around; /* (수정) 세로 균등 분배 */
+    align-items: center; /* (수정) 가로 중앙 정렬 */
 }
 
-@keyframes shake-animation {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-5px); }
-    40%, 80% { transform: translateX(5px); }
+/* 활성화된 화면만 보여주기 */
+.screen.flex {
+    display: flex;
 }
 
-.type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem; }
-
-/* --- Attack Effect Styles --- */
-.effect {
+/* 공격 이펙트 스타일 */
+.attack-effect {
     position: absolute;
-    transform: translate(-50%, -50%);
-    left: var(--start-x);
-    top: var(--start-y);
-    animation-duration: 0.6s;
-    animation-fill-mode: forwards;
-    animation-timing-function: ease-out;
+    width: 50px;
+    height: 50px;
+    background-color: rgba(128, 128, 128, 0.7); /* 기본 Normal 타입 */
+    border-radius: 50%;
+    animation: flash 0.5s ease-out;
+    pointer-events: none; /* 이펙트가 클릭 방해하지 않도록 설정 */
 }
 
-/* Generic move and fade animation */
-@keyframes move-and-fade {
-    0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
-    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1); opacity: 0; }
-}
-
-/* Explosion animation */
-@keyframes move-and-explode {
-    0% { transform: translate(-50%, -50%) scale(0.2); }
-    70% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(0.5); }
-    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(2); opacity: 0; }
-}
-
-.effect-노말, .effect-바위, .effect-땅, .effect-강철 {
-    width: 60px; height: 60px; border-radius: 50%;
-    border: 5px solid rgba(168, 168, 120, 0.8);
-    animation-name: move-and-fade;
-}
-.effect-바위 { border-color: rgba(182, 161, 54, 0.8); }
-.effect-땅 { border-color: rgba(226, 191, 101, 0.8); }
-.effect-강철 { border-color: rgba(183, 183, 206, 0.8); }
+/* 타입별 이펙트 색상 및 위치 (예시) */
+.attack-effect.fire { background-color: rgba(255, 69, 0, 0.7); }
+.attack-effect.water { background-color: rgba(30, 144, 255, 0.7); }
+.attack-effect.grass { background-color: rgba(50, 205, 50, 0.7); }
+.attack-effect.electric { background-color: rgba(255, 215, 0, 0.7); }
+.attack-effect.ghost { background-color: rgba(75, 0, 130, 0.7); }
+.attack-effect.psychic { background-color: rgba(255, 20, 147, 0.7); }
 
 
-.effect-불, .effect-드래곤 {
-    width: 80px; height: 80px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(240, 128, 48, 1) 0%, rgba(240, 128, 48, 0) 70%);
-    animation-name: move-and-explode;
-}
-.effect-드래곤 { background: radial-gradient(circle, rgba(111, 53, 252, 1) 0%, rgba(111, 53, 252, 0) 70%); }
-
-
-.effect-물 { width: 50px; height: 50px; background: #6890f0; border-radius: 50%; animation-name: water-splash; }
-@keyframes water-splash {
-    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
-    70% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1.5); opacity: 1; }
-    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(2); opacity: 0; }
-}
-
-.effect-전기 {
-    width: 10px; height: 100px; background: #f8d030;
-    animation-name: electric-bolt;
-    transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) rotate(45deg);
-}
-@keyframes electric-bolt {
-    0%, 100% { opacity: 0; }
-    10%, 30%, 50%, 70%, 90% { opacity: 1; }
-    20%, 40%, 60%, 80% { opacity: 0.5; }
-}
-
-.effect-풀 {
-    width: 20px; height: 30px; background-color: #78c850; border-radius: 50% 0;
-    animation-name: move-and-spin;
-}
-@keyframes move-and-spin {
-    from { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; }
-    to { transform: translate(var(--end-translate-x), var(--end-translate-y)) rotate(720deg); opacity: 0; }
-}
-
-.effect-격투, .effect-악 {
-    width: 50px; height: 50px; background-color: rgba(194, 46, 40, 0.7); border-radius: 10px;
-    animation-name: punch-effect;
-}
-.effect-악 { background-color: rgba(112, 88, 72, 0.7); }
-@keyframes punch-effect {
-    0% { transform: translate(-50%, -50%) scale(0.5); }
-    70% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1.2); }
-    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1); opacity: 0; }
-}
-
-.effect-에스퍼, .effect-고스트, .effect-독, .effect-페어리 {
-    width: 70px; height: 70px; border-radius: 50%;
-    border: 4px solid #f85888; box-shadow: 0 0 15px #f85888;
-    animation-name: psychic-wave;
-    transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%);
-}
-.effect-고스트 { border-color: #705898; box-shadow: 0 0 15px #705898; }
-.effect-독 { border-color: #a040a0; box-shadow: 0 0 15px #a040a0; }
-.effect-페어리 { border-color: #ee99ac; box-shadow: 0 0 15px #ee99ac; }
-@keyframes psychic-wave {
-    from { opacity: 1; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(0); }
-    to { opacity: 0; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(1.5); }
-}
-
-.effect-얼음 {
-    width: 15px; height: 15px; background: #98d8d8;
-    animation-name: ice-shard;
-}
-@keyframes ice-shard {
-    from { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-    to { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1); opacity: 0; }
-}
-
-.effect-비행 {
-    width: 50px; height: 2px; background: #a890f0;
-    animation-name: move-and-fade;
+@keyframes flash {
+    0% { transform: scale(0); opacity: 1; }
+    100% { transform: scale(3); opacity: 0; }
 }
