@@ -100,7 +100,7 @@ function selectPokemon(key) {
     let selectedKey = key === 'random' ? Object.keys(POKEMONS)[Math.floor(Math.random() * Object.keys(POKEMONS).length)] : key;
     const basePokemon = POKEMONS[selectedKey];
     playerPokemon = { ...basePokemon, id: selectedKey, maxHp: basePokemon.hp, hp: basePokemon.hp, statusEffects: {}, statModifiers: { attack: 0, defense: 0 } };
-    learnedSkills = [DEFAULT_SKILL]; // Start with default skill
+    learnedSkills = [DEFAULT_SKILL];
     playerInventory = { potion: 1 };
     currentStage = 0;
     gameStages = generateStages(playerPokemon);
@@ -261,8 +261,28 @@ function startBattle() {
     document.getElementById('stage-title-battle').textContent = stageInfo.name;
     updateBattleUI();
     showScreen('battle');
-    battleLogUpdate(`${opponentPokemon.name}이(가) 나타났다!`, 2000);
+    battleLogUpdate(`${opponentPokemon.name}이(가) 나타났다!`, 2000, () => {
+        battleLogUpdate('무엇을 할까?', 0);
+    });
 }
+
+function toggleBattleButtons(disabled) {
+    const buttons = document.querySelectorAll('#skill-buttons button, #item-buttons button');
+    buttons.forEach(button => {
+        button.disabled = disabled;
+        if (disabled) {
+            button.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            // Re-enable only if logically possible (e.g., potion available)
+            if (button.id === 'potion-button' && (playerInventory.potion <= 0 || playerPokemon.hp === playerPokemon.maxHp)) {
+                // Keep it disabled
+            } else {
+                 button.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+    });
+}
+
 
 function updateBattleUI() {
     const playerHpBar = document.getElementById('player-hp');
@@ -306,19 +326,22 @@ function updateBattleUI() {
     const itemButtonsContainer = document.getElementById('item-buttons');
     itemButtonsContainer.innerHTML = '';
     const potionButton = document.createElement('button');
+    potionButton.id = 'potion-button';
     potionButton.className = 'bg-green-200 hover:bg-green-300 text-green-800 font-bold py-2 px-2 rounded-lg shadow-sm transition text-xs sm:text-sm';
     potionButton.textContent = `상처약 (${playerInventory.potion})`;
     potionButton.disabled = playerInventory.potion <= 0 || playerPokemon.hp === playerPokemon.maxHp;
-    if(potionButton.disabled) potionButton.classList.add('opacity-50');
+    if(potionButton.disabled) potionButton.classList.add('opacity-50', 'cursor-not-allowed');
     potionButton.onclick = usePotion;
     itemButtonsContainer.appendChild(potionButton);
 }
 
-function battleLogUpdate(message, duration = 1500) {
+function battleLogUpdate(message, duration = 1500, callback = () => {}) {
     const log = document.getElementById('battle-log');
     log.textContent = message;
     clearTimeout(battleLogTimeout);
-    battleLogTimeout = setTimeout(() => { log.textContent = '무엇을 할까?'; }, duration);
+    if (duration > 0) {
+        battleLogTimeout = setTimeout(callback, duration);
+    }
 }
 
 function calculateDamage(attacker, defender, skill) {
@@ -343,7 +366,6 @@ function playAttackAnimation(attackerImg, defenderImg, skill) {
 
     const effectDiv = document.createElement('div');
     const typeClass = `effect-${skill.type}`;
-    // Fallback to normal type if a specific class doesn't exist
     effectDiv.className = `effect ${typeClass}`;
     
     effectDiv.style.setProperty('--start-x', `${startX}px`);
@@ -357,7 +379,7 @@ function playAttackAnimation(attackerImg, defenderImg, skill) {
 
     setTimeout(() => {
         effectDiv.remove();
-    }, 1000); // Remove after animation
+    }, 1000);
 }
 
 
@@ -366,8 +388,7 @@ function performAttack(attacker, defender, skill, onComplete) {
     const defenderImg = defender === playerPokemon ? document.getElementById('player-img') : document.getElementById('opponent-img');
 
     if (attacker.statusEffects.paralysis && Math.random() < 0.25) {
-        battleLogUpdate(`${attacker.name}은(는) 마비되어 움직일 수 없다!`);
-        setTimeout(onComplete, 1500);
+        battleLogUpdate(`${attacker.name}은(는) 마비되어 움직일 수 없다!`, 1500, onComplete);
         return;
     }
 
@@ -376,41 +397,44 @@ function performAttack(attacker, defender, skill, onComplete) {
 
     setTimeout(() => {
         attackerImg.classList.remove('lunge-animation');
-        battleLogUpdate(`${attacker.name}의 ${skill.name} 공격!`);
-        const { damage, effectivenessMessage } = calculateDamage(attacker, defender, skill);
-        
-        defenderImg.classList.add('shake');
-        setTimeout(() => defenderImg.classList.remove('shake'), 400);
+        battleLogUpdate(`${attacker.name}의 ${skill.name} 공격!`, 1500, () => {
+            const { damage, effectivenessMessage } = calculateDamage(attacker, defender, skill);
+            defender.hp = Math.max(0, defender.hp - damage);
 
-        defender.hp = Math.max(0, defender.hp - damage);
+            if (skill.isStruggle) {
+                const recoilDamage = Math.floor(damage / 4);
+                attacker.hp = Math.max(0, attacker.hp - recoilDamage);
+            }
 
-        if (skill.isStruggle) {
-            const recoilDamage = Math.floor(damage / 4);
-            attacker.hp = Math.max(0, attacker.hp - recoilDamage);
-            battleLogUpdate(`${attacker.name}은(는) 반동 데미지를 입었다!`, 2000);
-        }
+            if (skill.effect) applyEffect(skill.effect, attacker, defender);
+            
+            defenderImg.classList.add('shake');
+            updateBattleUI();
+            setTimeout(() => defenderImg.classList.remove('shake'), 400);
 
-        if (skill.effect) applyEffect(skill.effect, attacker, defender);
-        
-        updateBattleUI();
-        setTimeout(() => {
-            if (effectivenessMessage) battleLogUpdate(effectivenessMessage);
-            setTimeout(onComplete, 1000);
-        }, 500);
+            if (effectivenessMessage) {
+                battleLogUpdate(effectivenessMessage, 1000, onComplete);
+            } else {
+                onComplete();
+            }
+        });
     }, 500);
 }
 
 function playerAttack(skillIndex) {
     if (!isBattling) return;
     isBattling = false;
+    toggleBattleButtons(true);
     
     const isStruggle = skillIndex === -1;
     const skill = isStruggle ? STRUGGLE_SKILL : battleSkills[skillIndex];
 
     if (!isStruggle) {
         if (skill.pp <= 0) {
-            battleLogUpdate("PP가 부족하여 기술을 사용할 수 없다!");
-            isBattling = true;
+            battleLogUpdate("PP가 부족하여 기술을 사용할 수 없다!", 1500, () => {
+                isBattling = true;
+                toggleBattleButtons(false);
+            });
             return;
         }
         skill.pp--;
@@ -426,10 +450,13 @@ function playerAttack(skillIndex) {
 function opponentAttack() {
     const skill = opponentPokemon.skills[Math.floor(Math.random() * opponentPokemon.skills.length)];
     performAttack(opponentPokemon, playerPokemon, skill, () => {
-        if (playerPokemon.hp <= 0) loseBattle();
-        else {
+        if (playerPokemon.hp <= 0) {
+            loseBattle();
+        } else {
             isBattling = true;
+            battleLogUpdate('무엇을 할까?', 0);
             updateBattleUI();
+            toggleBattleButtons(false);
         }
     });
 }
@@ -437,12 +464,12 @@ function opponentAttack() {
 function usePotion() {
     if (playerInventory.potion > 0 && playerPokemon.hp < playerPokemon.maxHp) {
         isBattling = false;
+        toggleBattleButtons(true);
         playerInventory.potion--;
         const healAmount = Math.floor(playerPokemon.maxHp * 0.3);
         playerPokemon.hp = Math.min(playerPokemon.maxHp, playerPokemon.hp + healAmount);
-        battleLogUpdate(`${playerPokemon.name}은(는) 상처약을 사용했다!`);
+        battleLogUpdate(`${playerPokemon.name}은(는) 상처약을 사용했다!`, 1500, opponentAttack);
         updateBattleUI();
-        setTimeout(opponentAttack, 1500);
     }
 }
 
@@ -506,41 +533,4 @@ function showHallOfFame() {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4">아직 기록이 없습니다.</td></tr>';
         } else {
             records.forEach(r => {
-                tbody.innerHTML += `<tr><td class="p-2 border-t">${r.date}</td><td class="p-2 border-t">${r.nickname} (${r.pokemon})</td><td class="p-2 border-t">${r.clearedStages}</td></tr>`;
-            });
-        }
-    } catch (e) { console.error("Could not load records from localStorage:", e); }
-    showModal('hallOfFame');
-}
-
-// --- Event Listeners ---
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('start-game-button').addEventListener('click', () => { initSelectionScreen(); showScreen('selection'); });
-    document.getElementById('next-question-button').addEventListener('click', proceedAfterExplanation);
-    document.getElementById('next-stage-button').addEventListener('click', startStage);
-    document.getElementById('play-again-button').addEventListener('click', resetGame);
-    document.getElementById('cancel-forget-button').addEventListener('click', startBattle);
-    document.getElementById('hall-of-fame-button').addEventListener('click', showHallOfFame);
-    document.getElementById('submit-record-button').addEventListener('click', () => saveRecord(true));
-    document.getElementById('close-hof-button').addEventListener('click', hideModals);
-    document.getElementById('type-chart-icon').addEventListener('click', () => showModal('typeChart'));
-    document.getElementById('close-type-chart-button').addEventListener('click', hideModals);
-
-    const volumeSlider = document.getElementById('volume-slider');
-    const soundOnIcon = document.getElementById('sound-on-icon');
-    const soundOffIcon = document.getElementById('sound-off-icon');
-    function setVolume(volume) {
-        bgm.battle.volume = volume;
-        bgm.quiz.volume = volume;
-        soundOnIcon.classList.toggle('hidden', volume <= 0);
-        soundOffIcon.classList.toggle('hidden', volume > 0);
-    }
-    volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
-    document.getElementById('volume-control').addEventListener('click', () => {
-        const newVolume = volumeSlider.value > 0 ? 0 : 0.5;
-        volumeSlider.value = newVolume;
-        setVolume(newVolume);
-    });
-    setVolume(volumeSlider.value);
-    showScreen('start');
-});
+                tbody.innerHTML += `<tr><td class="p-2 border-t">${r.date}</td><td class="p-2 border-t">${r.nickname} (${r.pokemon})</td><td cla
