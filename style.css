@@ -1,6 +1,6 @@
 html {
     /* Set base font size for mobile for better responsiveness */
-    font-size: 14px;
+    font-size: 15px;
 }
 
 @media (min-width: 640px) { /* sm breakpoint */
@@ -12,6 +12,7 @@ html {
 body {
     font-family: 'Jua', sans-serif;
     background-color: #f0f9ff; /* A light blue background */
+    -webkit-text-size-adjust: 100%; /* Prevents font scaling on orientation change in iOS */
 }
 
 .screen {
@@ -29,12 +30,15 @@ body {
 }
 
 .pokemon-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 .battle-pokemon {
     transition: transform 0.3s ease-in-out;
+    /* Ensure images don't shrink too much */
+    min-width: 4rem; /* 64px */
+    min-height: 4rem;
 }
 
 .modal {
@@ -56,7 +60,7 @@ body {
 
 @keyframes lunge {
     50% {
-        transform: translate(15px, -15px) scale(1.1);
+        transform: translate(10px, -10px) scale(1.1);
     }
     100% {
         transform: translate(0, 0) scale(1);
@@ -65,12 +69,12 @@ body {
 
 @keyframes shake-animation {
     0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-8px); }
-    40%, 80% { transform: translateX(8px); }
+    20%, 60% { transform: translateX(-5px); }
+    40%, 80% { transform: translateX(5px); }
 }
 
 .type-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 0.5rem;
 }
