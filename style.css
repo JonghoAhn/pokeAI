@@ -79,6 +79,9 @@ body {
         transform: translate(0, 0) scale(1);
     }
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> parent of 031b21e (이펙트 추가)
+=======
 >>>>>>> parent of 031b21e (이펙트 추가)
 =======
 >>>>>>> parent of 031b21e (이펙트 추가)
@@ -92,6 +95,7 @@ body {
     @apply bg-yellow-400 shadow-xl ring-4 ring-yellow-500;
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 /* 퀴즈 선택지 스타일 */
@@ -145,6 +149,8 @@ body {
     100% { transform: scale(3); opacity: 0; }
 }
 =======
+=======
+>>>>>>> parent of 031b21e (이펙트 추가)
 =======
 >>>>>>> parent of 031b21e (이펙트 추가)
 .type-grid {
