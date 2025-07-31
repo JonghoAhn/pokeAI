@@ -1,9 +1,8 @@
 html {
-    /* Set base font size for mobile for better responsiveness */
     font-size: 15px;
 }
 
-@media (min-width: 640px) { /* sm breakpoint */
+@media (min-width: 640px) {
     html {
         font-size: 16px;
     }
@@ -11,60 +10,24 @@ html {
 
 body {
     font-family: 'Jua', sans-serif;
-    background-color: #f0f9ff; /* A light blue background */
-    -webkit-text-size-adjust: 100%; /* Prevents font scaling on orientation change in iOS */
+    background-color: #f0f9ff;
+    -webkit-text-size-adjust: 100%;
 }
 
-.screen {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-}
+.screen { display: none; flex-direction: column; width: 100%; }
+.screen.active { display: flex; }
+.pokemon-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.pokemon-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
+.battle-pokemon { transition: transform 0.3s ease-in-out; min-width: 4rem; min-height: 4rem; }
+.modal { display: none; flex-direction: column; }
+.modal.active { display: flex; }
 
-.screen.active {
-    display: flex;
-}
-
-.pokemon-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.pokemon-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
-
-.battle-pokemon {
-    transition: transform 0.3s ease-in-out;
-    /* Ensure images don't shrink too much */
-    min-width: 4rem; /* 64px */
-    min-height: 4rem;
-}
-
-.modal {
-    display: none; /* Hidden by default */
-    flex-direction: column;
-}
-
-.modal.active {
-    display: flex; /* Shown when active */
-}
-
-.attack-animation {
-    animation: lunge 0.5s ease-in-out;
-}
-
-.shake {
-    animation: shake-animation 0.4s;
-}
+.lunge-animation { animation: lunge 0.5s ease-in-out; }
+.shake { animation: shake-animation 0.4s; }
 
 @keyframes lunge {
-    50% {
-        transform: translate(10px, -10px) scale(1.1);
-    }
-    100% {
-        transform: translate(0, 0) scale(1);
-    }
+    50% { transform: translate(10px, -10px) scale(1.1); }
+    100% { transform: translate(0, 0) scale(1); }
 }
 
 @keyframes shake-animation {
@@ -73,8 +36,114 @@ body {
     40%, 80% { transform: translateX(5px); }
 }
 
-.type-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0.5rem;
+.type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem; }
+
+/* --- Attack Effect Styles --- */
+.effect {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    left: var(--start-x);
+    top: var(--start-y);
+}
+
+/* 노말 타입 이펙트 */
+.effect-노말 {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(168, 168, 120, 0.8);
+    border-radius: 50%;
+    animation: move-and-fade 0.5s ease-out forwards;
+}
+@keyframes move-and-fade {
+    0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1); opacity: 0; }
+}
+
+/* 불 타입 이펙트 */
+.effect-불 {
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, rgba(240, 128, 48, 1) 0%, rgba(240, 128, 48, 0) 70%);
+    border-radius: 50%;
+    animation: move-and-explode 0.6s ease-out forwards;
+}
+@keyframes move-and-explode {
+    0% { transform: translate(-50%, -50%) scale(0.2); }
+    50% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(0.5); }
+    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(2); opacity: 0; }
+}
+
+/* 물 타입 이펙트 */
+.effect-물::before {
+    content: '';
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border: 5px solid #6890f0;
+    border-radius: 50%;
+    animation: move-and-splash 0.6s ease-out forwards;
+}
+@keyframes move-and-splash {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    50% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1); opacity: 1; }
+    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1.2); opacity: 0; border-width: 0px; }
+}
+
+/* 전기 타입 이펙트 */
+.effect-전기 {
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255, 255, 0, 0.8), transparent 60%);
+    border-radius: 50%;
+    animation: electric-shock 0.4s forwards;
+    transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%);
+    opacity: 0;
+}
+@keyframes electric-shock {
+    0% { opacity: 1; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(0.5); }
+    50% { opacity: 1; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(1); }
+}
+
+/* 풀 타입 이펙트 */
+.effect-풀 {
+    width: 20px;
+    height: 30px;
+    background-color: #78c850;
+    border-radius: 50% 0;
+    animation: move-and-spin 0.7s ease-out forwards;
+}
+@keyframes move-and-spin {
+    from { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; }
+    to { transform: translate(var(--end-translate-x), var(--end-translate-y)) rotate(720deg); opacity: 0; }
+}
+
+/* 격투 타입 이펙트 */
+.effect-격투 {
+    width: 50px;
+    height: 50px;
+    background-color: rgba(194, 46, 40, 0.7);
+    border-radius: 10px;
+    animation: punch-effect 0.4s ease-in forwards;
+}
+@keyframes punch-effect {
+    0% { transform: translate(-50%, -50%) scale(0.5); }
+    50% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1.2); }
+    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1); opacity: 0; }
+}
+
+/* 에스퍼 타입 이펙트 */
+.effect-에스퍼 {
+    width: 70px;
+    height: 70px;
+    border: 4px solid #f85888;
+    border-radius: 50%;
+    box-shadow: 0 0 15px #f85888;
+    animation: psychic-wave 0.7s ease-out forwards;
+    transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%);
+    opacity: 0;
+}
+@keyframes psychic-wave {
+    0% { opacity: 1; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(0); }
+    100% { opacity: 0; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(1.5); }
 }

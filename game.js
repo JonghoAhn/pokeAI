@@ -202,13 +202,11 @@ function showSkillSelection(numberOfCorrectAnswers) {
     let selectedForChoice = shuffleArray(availableSkills).slice(0, numberOfChoices);
 
     if (numberOfChoices === 1 && selectedForChoice.length > 0) {
-        // Automatically learn the single skill
         const skillToLearn = selectedForChoice[0];
         const feedback = document.getElementById('feedback-message');
         feedback.textContent = `${skillToLearn.name}을(를) 배웠다!`;
         setTimeout(() => { feedback.textContent = ""; learnSkill(skillToLearn); }, 2000);
     } else {
-        // Show modal for choice
         document.getElementById('skill-selection-modal').querySelector('p').textContent = `퀴즈 ${numberOfCorrectAnswers}개 정답! 배울 기술을 하나 선택하세요.`;
         selectedForChoice.forEach(skill => {
             const button = document.createElement('button');
@@ -255,10 +253,7 @@ function startBattle() {
     bgm.quiz.pause();
     bgm.battle.currentTime = 0;
     bgm.battle.play().catch(e => {});
-
-    // Initialize skills with PP for the current battle
     battleSkills = learnedSkills.map(skill => ({ ...skill, pp: 3 }));
-
     const stageInfo = gameStages[currentStage];
     opponentPokemon = JSON.parse(JSON.stringify(stageInfo.opponent));
     opponentPokemon.statModifiers = { attack: 0, defense: 0 };
@@ -270,7 +265,6 @@ function startBattle() {
 }
 
 function updateBattleUI() {
-    // Player & Opponent HP Bars
     const playerHpBar = document.getElementById('player-hp');
     const playerHpPercent = (playerPokemon.hp / playerPokemon.maxHp) * 100;
     playerHpBar.style.width = `${playerHpPercent}%`;
@@ -287,7 +281,6 @@ function updateBattleUI() {
     document.getElementById('opponent-name').textContent = opponentPokemon.name;
     document.getElementById('opponent-img').src = opponentPokemon.img;
 
-    // Skill & Item Buttons
     const skillButtonsContainer = document.getElementById('skill-buttons');
     skillButtonsContainer.innerHTML = '';
     const canUseAnySkill = battleSkills.some(skill => skill.pp > 0);
@@ -296,18 +289,17 @@ function updateBattleUI() {
         battleSkills.forEach((skill, index) => {
             const button = document.createElement('button');
             button.className = `bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-2 rounded-lg shadow-sm transition text-xs sm:text-sm`;
-            button.innerHTML = `${skill.name}<br>(위력:${skill.power} / PP:${skill.pp})`;
+            button.innerHTML = `${skill.name}<br>(위력:${skill.power || 0} / PP:${skill.pp})`;
             button.disabled = skill.pp <= 0;
             if (button.disabled) button.classList.add('opacity-50', 'cursor-not-allowed');
             button.onclick = () => playerAttack(index);
             skillButtonsContainer.appendChild(button);
         });
     } else {
-        // Show Struggle button if no PP left
         const struggleButton = document.createElement('button');
         struggleButton.className = `bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-2 rounded-lg shadow-sm transition text-xs sm:text-sm col-span-2`;
         struggleButton.innerHTML = `${STRUGGLE_SKILL.name}<br>(위력:${STRUGGLE_SKILL.power})`;
-        struggleButton.onclick = () => playerAttack(-1); // Use -1 to signify Struggle
+        struggleButton.onclick = () => playerAttack(-1);
         skillButtonsContainer.appendChild(struggleButton);
     }
     
@@ -338,6 +330,37 @@ function calculateDamage(attacker, defender, skill) {
     return { damage, effectivenessMessage };
 }
 
+function playAttackAnimation(attackerImg, defenderImg, skill) {
+    const overlay = document.getElementById('attack-animation-overlay');
+    const attackerRect = attackerImg.getBoundingClientRect();
+    const defenderRect = defenderImg.getBoundingClientRect();
+    const overlayRect = overlay.getBoundingClientRect();
+
+    const startX = attackerRect.left + attackerRect.width / 2 - overlayRect.left;
+    const startY = attackerRect.top + attackerRect.height / 2 - overlayRect.top;
+    const endX = defenderRect.left + defenderRect.width / 2 - overlayRect.left;
+    const endY = defenderRect.top + defenderRect.height / 2 - overlayRect.top;
+
+    const effectDiv = document.createElement('div');
+    const typeClass = `effect-${skill.type}`;
+    // Fallback to normal type if a specific class doesn't exist
+    effectDiv.className = `effect ${typeClass}`;
+    
+    effectDiv.style.setProperty('--start-x', `${startX}px`);
+    effectDiv.style.setProperty('--start-y', `${startY}px`);
+    effectDiv.style.setProperty('--end-x', `${endX}px`);
+    effectDiv.style.setProperty('--end-y', `${endY}px`);
+    effectDiv.style.setProperty('--end-translate-x', `${endX - startX}px`);
+    effectDiv.style.setProperty('--end-translate-y', `${endY - startY}px`);
+
+    overlay.appendChild(effectDiv);
+
+    setTimeout(() => {
+        effectDiv.remove();
+    }, 1000); // Remove after animation
+}
+
+
 function performAttack(attacker, defender, skill, onComplete) {
     const attackerImg = attacker === playerPokemon ? document.getElementById('player-img') : document.getElementById('opponent-img');
     const defenderImg = defender === playerPokemon ? document.getElementById('player-img') : document.getElementById('opponent-img');
@@ -348,11 +371,17 @@ function performAttack(attacker, defender, skill, onComplete) {
         return;
     }
 
-    attackerImg.classList.add('attack-animation');
+    attackerImg.classList.add('lunge-animation');
+    playAttackAnimation(attackerImg, defenderImg, skill);
+
     setTimeout(() => {
-        attackerImg.classList.remove('attack-animation');
+        attackerImg.classList.remove('lunge-animation');
         battleLogUpdate(`${attacker.name}의 ${skill.name} 공격!`);
         const { damage, effectivenessMessage } = calculateDamage(attacker, defender, skill);
+        
+        defenderImg.classList.add('shake');
+        setTimeout(() => defenderImg.classList.remove('shake'), 400);
+
         defender.hp = Math.max(0, defender.hp - damage);
 
         if (skill.isStruggle) {
@@ -362,10 +391,9 @@ function performAttack(attacker, defender, skill, onComplete) {
         }
 
         if (skill.effect) applyEffect(skill.effect, attacker, defender);
-        defenderImg.classList.add('shake');
+        
         updateBattleUI();
         setTimeout(() => {
-            defenderImg.classList.remove('shake');
             if (effectivenessMessage) battleLogUpdate(effectivenessMessage);
             setTimeout(onComplete, 1000);
         }, 500);
@@ -401,7 +429,7 @@ function opponentAttack() {
         if (playerPokemon.hp <= 0) loseBattle();
         else {
             isBattling = true;
-            updateBattleUI(); // Update UI to re-enable buttons
+            updateBattleUI();
         }
     });
 }
