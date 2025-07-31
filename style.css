@@ -1,3 +1,14 @@
+html {
+    /* Set base font size for mobile for better responsiveness */
+    font-size: 14px;
+}
+
+@media (min-width: 640px) { /* sm breakpoint */
+    html {
+        font-size: 16px;
+    }
+}
+
 body {
     font-family: 'Jua', sans-serif;
     background-color: #f0f9ff; /* A light blue background */
