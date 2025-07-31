@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,6 +10,75 @@ body {
 /* 기본 버튼 스타일 */
 .btn-primary {
     @apply bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1;
+=======
+html {
+    /* Set base font size for mobile for better responsiveness */
+    font-size: 15px;
+}
+
+@media (min-width: 640px) { /* sm breakpoint */
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    font-family: 'Jua', sans-serif;
+    background-color: #f0f9ff; /* A light blue background */
+    -webkit-text-size-adjust: 100%; /* Prevents font scaling on orientation change in iOS */
+}
+
+.screen {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+}
+
+.screen.active {
+    display: flex;
+}
+
+.pokemon-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pokemon-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.battle-pokemon {
+    transition: transform 0.3s ease-in-out;
+    /* Ensure images don't shrink too much */
+    min-width: 4rem; /* 64px */
+    min-height: 4rem;
+}
+
+.modal {
+    display: none; /* Hidden by default */
+    flex-direction: column;
+}
+
+.modal.active {
+    display: flex; /* Shown when active */
+}
+
+.attack-animation {
+    animation: lunge 0.5s ease-in-out;
+}
+
+.shake {
+    animation: shake-animation 0.4s;
+}
+
+@keyframes lunge {
+    50% {
+        transform: translate(10px, -10px) scale(1.1);
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+>>>>>>> parent of 031b21e (이펙트 추가)
 }
 
 /* 포켓몬 카드 스타일 */
@@ -19,6 +89,7 @@ body {
     @apply bg-yellow-400 shadow-xl ring-4 ring-yellow-500;
 }
 
+<<<<<<< HEAD
 /* 퀴즈 선택지 스타일 */
 .quiz-option {
     @apply bg-white border-2 border-gray-300 p-3 rounded-lg text-left cursor-pointer transition-all duration-200 hover:bg-blue-100 hover:border-blue-400;
@@ -69,3 +140,10 @@ body {
     0% { transform: scale(0); opacity: 1; }
     100% { transform: scale(3); opacity: 0; }
 }
+=======
+.type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.5rem;
+}
+>>>>>>> parent of 031b21e (이펙트 추가)
