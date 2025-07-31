@@ -1,254 +1,492 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM 요소 가져오기
-    const startScreen = document.getElementById('start-screen');
-    const selectionScreen = document.getElementById('selection-screen');
-    const battleScreen = document.getElementById('battle-screen');
-    const quizScreen = document.getElementById('quiz-screen');
-    const endScreen = document.getElementById('end-screen');
+    // --- DOM Elements ---
+    const screens = {
+        start: document.getElementById('start-screen'),
+        selection: document.getElementById('selection-screen'),
+        quiz: document.getElementById('quiz-screen'),
+        battle: document.getElementById('battle-screen'),
+    };
 
-    const startButton = document.getElementById('start-button');
-    const pokemonSelectionContainer = document.getElementById('pokemon-selection');
-    const attackButton = document.getElementById('attack-button');
-    const restartButton = document.getElementById('restart-button');
+    const modals = {
+        stageClear: document.getElementById('stage-clear-modal'),
+        result: document.getElementById('result-modal'),
+        record: document.getElementById('record-modal'),
+        hallOfFame: document.getElementById('hall-of-fame-modal'),
+        skillSelection: document.getElementById('skill-selection-modal'),
+        forgetSkill: document.getElementById('forget-skill-modal'),
+        explanation: document.getElementById('explanation-modal'),
+        typeChart: document.getElementById('type-chart-modal'),
+    };
 
-    // 오디오 요소
-    const bgmBattle = document.getElementById('bgm-battle');
-    const bgmQuiz = document.getElementById('bgm-quiz');
+    const buttons = {
+        start: document.getElementById('start-game-button'),
+        nextStage: document.getElementById('next-stage-button'),
+        playAgain: document.getElementById('play-again-button'),
+        submitRecord: document.getElementById('submit-record-button'),
+        closeHof: document.getElementById('close-hof-button'),
+        hallOfFame: document.getElementById('hall-of-fame-button'),
+        typeChart: document.getElementById('type-chart-icon'),
+        closeTypeChart: document.getElementById('close-type-chart-button'),
+        nextQuestion: document.getElementById('next-question-button'),
+        cancelForget: document.getElementById('cancel-forget-button'),
+    };
 
-    // 게임 상태 변수
-    let playerPokemon = null;
-    let opponentPokemon = null;
-    let currentOpponentIndex = 0;
-    let quizAnswered = false;
-
-    // --- 화면 전환 함수 ---
-    function showScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(screen => {
-            screen.classList.remove('flex');
-        });
-        document.getElementById(screenId).classList.add('flex');
-    }
+    const audio = {
+        bgmBattle: document.getElementById('bgm-battle'),
+        bgmQuiz: document.getElementById('bgm-quiz'),
+        sfxCorrect: document.getElementById('sfx-correct'),
+        sfxIncorrect: document.getElementById('sfx-incorrect'),
+        sfxWin: document.getElementById('sfx-win'),
+        sfxLose: document.getElementById('sfx-lose'),
+        sfxAttack: document.getElementById('sfx-attack'),
+    };
     
-    // --- BGM 제어 함수 ---
-    function playBgm(type) {
-        bgmBattle.pause();
-        bgmQuiz.pause();
-        bgmBattle.currentTime = 0;
-        bgmQuiz.currentTime = 0;
+    const volumeControl = {
+        icon: document.getElementById('volume-control'),
+        slider: document.getElementById('volume-slider'),
+        soundOn: document.getElementById('sound-on-icon'),
+        soundOff: document.getElementById('sound-off-icon'),
+    };
 
-        if (type === 'battle' && bgmBattle) {
-            bgmBattle.volume = 0.3;
-            bgmBattle.play().catch(e => console.error("전투 BGM 재생 실패:", e));
-        } else if (type === 'quiz' && bgmQuiz) {
-            bgmQuiz.volume = 0.3;
-            bgmQuiz.play().catch(e => console.error("퀴즈 BGM 재생 실패:", e));
+    // --- Game State ---
+    let player, opponent;
+    let currentStage = 0;
+    let learnedSkills = [];
+    let availableQuizzes = [];
+    let hallOfFame = [];
+    let currentQuiz = null;
+    let isSoundMuted = false;
+    const MAX_SKILLS = 4;
+    const TOTAL_STAGES = 7;
+
+    // --- Utility Functions ---
+    const showScreen = (screenName) => {
+        Object.values(screens).forEach(s => s.classList.remove('flex'));
+        screens[screenName].classList.add('flex');
+    };
+
+    const showModal = (modalName, show = true) => {
+        if (show) {
+            modals[modalName].classList.add('flex');
+            modals[modalName].classList.remove('hidden');
+        } else {
+            modals[modalName].classList.remove('flex');
+            modals[modalName].classList.add('hidden');
         }
+    };
+    
+    const playSound = (sound, isBgm = false) => {
+        if (isSoundMuted) return;
+        if (isBgm) {
+            Object.values(audio).forEach(a => a.pause());
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log("Audio play failed", e));
+        } else {
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log("Audio play failed", e));
+        }
+    };
+
+    const updateVolume = () => {
+        const volume = isSoundMuted ? 0 : volumeControl.slider.value;
+        Object.values(audio).forEach(a => a.volume = volume);
+        volumeControl.soundOn.classList.toggle('hidden', isSoundMuted || volume == 0);
+        volumeControl.soundOff.classList.toggle('hidden', !isSoundMuted && volume > 0);
+    };
+
+    // --- Game Initialization ---
+    function init() {
+        loadHallOfFame();
+        buttons.start.addEventListener('click', startGame);
+        buttons.playAgain.addEventListener('click', resetGame);
+        buttons.hallOfFame.addEventListener('click', () => showModal('hallOfFame'));
+        buttons.closeHof.addEventListener('click', () => showModal('hallOfFame', false));
+        buttons.typeChart.addEventListener('click', () => showModal('typeChart'));
+        buttons.closeTypeChart.addEventListener('click', () => showModal('typeChart', false));
+        buttons.submitRecord.addEventListener('click', saveRecord);
+        buttons.nextStage.addEventListener('click', startStage);
+        buttons.nextQuestion.addEventListener('click', handlePostQuiz);
+        buttons.cancelForget.addEventListener('click', () => {
+            showModal('forgetSkill', false);
+            handlePostQuiz();
+        });
+        
+        volumeControl.icon.addEventListener('click', () => {
+            isSoundMuted = !isSoundMuted;
+            updateVolume();
+        });
+        volumeControl.slider.addEventListener('input', updateVolume);
+
+        showScreen('start');
+        updateVolume();
     }
 
-    // --- 게임 초기화 및 시작 ---
-    function initGame() {
-        showScreen('selection-screen');
-        pokemonSelectionContainer.innerHTML = '';
-        currentOpponentIndex = 0;
-        
-        POKEMONS.forEach(pokemon => {
+    function startGame() {
+        showScreen('selection');
+        const pokemonOptions = document.getElementById('pokemon-options');
+        pokemonOptions.innerHTML = '';
+        Object.keys(POKEMONS).forEach(key => {
+            const p = POKEMONS[key];
             const card = document.createElement('div');
             card.className = 'pokemon-card';
-            card.dataset.id = pokemon.id;
             card.innerHTML = `
-                <img src="${pokemon.img}" alt="${pokemon.name}" class="w-20 h-20 mx-auto mb-2">
-                <h3 class="font-bold">${pokemon.name}</h3>
-                <p class="text-sm text-gray-600">${pokemon.type}</p>
+                <img src="${p.img}" alt="${p.name}" class="w-20 h-20 mx-auto mb-2">
+                <h3 class="font-bold">${p.name}</h3>
+                <p class="text-sm text-gray-600">${p.types.join(', ')}</p>
             `;
-            card.addEventListener('click', () => selectPokemon(pokemon.id));
-            pokemonSelectionContainer.appendChild(card);
+            card.addEventListener('click', () => selectPokemon(key));
+            pokemonOptions.appendChild(card);
         });
-    }
-
-    function selectPokemon(id) {
-        playerPokemon = { ...POKEMONS.find(p => p.id === id), hp: 100 };
-        document.querySelectorAll('.pokemon-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-        document.querySelector(`.pokemon-card[data-id='${id}']`).classList.add('selected');
-        
-        setTimeout(() => {
-            startBattle();
-        }, 500);
     }
     
-    // --- 배틀 로직 ---
-    function startBattle() {
-        if (currentOpponentIndex >= OPPONENTS.length) {
-            gameEnd(true); // 모든 상대를 이기면 게임 승리
+    function resetGame() {
+        showModal('result', false);
+        startGame();
+    }
+
+    function selectPokemon(key) {
+        player = JSON.parse(JSON.stringify(POKEMONS[key])); // Deep copy
+        player.id = key;
+        player.maxHp = player.hp;
+        
+        // 초기 기술 설정
+        learnedSkills = POKEMON_LEARNSETS[key]
+            .map(skillName => Object.values(SKILLS).flat().find(s => s.name === skillName))
+            .filter(Boolean) // 찾지 못한 스킬은 제외
+            .slice(0, MAX_SKILLS);
+
+        currentStage = 0;
+        availableQuizzes = [...ALL_QUIZZES]; // 퀴즈 목록 복사
+        startStage();
+    }
+
+    // --- Stage & Quiz Logic ---
+    function startStage() {
+        showModal('stageClear', false);
+        if (currentStage >= TOTAL_STAGES) {
+            gameEnd(true);
             return;
         }
-        opponentPokemon = { ...OPPONENTS[currentOpponentIndex], hp: 100 };
-        quizAnswered = false;
-
-        updateBattleUI();
-        showScreen('battle-screen');
-        playBgm('battle');
-        setMessage(`${opponentPokemon.name}(이)가 나타났다!`);
-    }
-
-    function updateBattleUI() {
-        // 플레이어 정보 업데이트
-        document.getElementById('player-name').textContent = playerPokemon.name;
-        document.getElementById('player-img').src = playerPokemon.img;
-        const playerHpPercentage = (playerPokemon.hp / 100) * 100;
-        document.getElementById('player-hp-bar').style.width = `${playerHpPercentage}%`;
-
-        // 상대 정보 업데이트
-        document.getElementById('opponent-name').textContent = opponentPokemon.name;
-        document.getElementById('opponent-img').src = opponentPokemon.img;
-        const opponentHpPercentage = (opponentPokemon.hp / 100) * 100;
-        document.getElementById('opponent-hp-bar').style.width = `${opponentHpPercentage}%`;
-    }
-    
-    function setMessage(msg) {
-        const battleMessage = document.getElementById('battle-message');
-        battleMessage.textContent = msg;
-    }
-
-    attackButton.addEventListener('click', () => {
-        if (quizAnswered) {
-             setMessage('퀴즈를 이미 풀었습니다. 다음 상대를 기다리세요.');
-             return;
-        }
-        playerAttack();
-    });
-
-    function playerAttack() {
-        attackButton.disabled = true;
-        showAttackEffect(playerPokemon.type, true);
-
-        const damage = 20 + Math.floor(Math.random() * 11); // 20-30
-        opponentPokemon.hp = Math.max(0, opponentPokemon.hp - damage);
-        setMessage(`${playerPokemon.name}의 공격! ${damage}의 데미지를 입혔다!`);
-        updateBattleUI();
-
-        setTimeout(() => {
-            if (opponentPokemon.hp <= 0) {
-                setMessage(`${opponentPokemon.name}를 쓰러뜨렸다!`);
-                setTimeout(startQuiz, 1500);
-            } else {
-                opponentAttack();
-            }
-        }, 1500);
-    }
-
-    function opponentAttack() {
-        showAttackEffect(opponentPokemon.type, false);
-        const damage = 15 + Math.floor(Math.random() * 11); // 15-25
-        playerPokemon.hp = Math.max(0, playerPokemon.hp - damage);
-        setMessage(`${opponentPokemon.name}의 공격! ${damage}의 데미지를 입었다!`);
-        updateBattleUI();
-
-        setTimeout(() => {
-            if (playerPokemon.hp <= 0) {
-                gameEnd(false); // 패배
-            } else {
-                attackButton.disabled = false;
-                setMessage('어떻게 할까?');
-            }
-        }, 1500);
-    }
-    
-    // --- 공격 이펙트 함수 ---
-    function showAttackEffect(type, isPlayerAttack) {
-        // (수정) 이펙트를 게임 컨테이너 내에 생성
-        const gameContainer = document.querySelector('.relative.overflow-hidden');
-        if (!gameContainer) return;
-
-        const effect = document.createElement('div');
-        effect.className = `attack-effect ${type.toLowerCase()}`;
+        currentStage++;
         
-        // 플레이어 공격은 상대 위치, 상대 공격은 플레이어 위치에 이펙트 표시
-        if (isPlayerAttack) {
-            effect.style.top = '25%';
-            effect.style.left = '65%';
-        } else {
-            effect.style.top = '55%';
-            effect.style.left = '25%';
+        // 상대 포켓몬 설정
+        opponent = JSON.parse(JSON.stringify(OPPONENT_POOL[currentStage - 1]));
+
+        // 퀴즈 설정
+        const quizIndex = Math.floor(Math.random() * availableQuizzes.length);
+        currentQuiz = availableQuizzes.splice(quizIndex, 1)[0];
+        if (availableQuizzes.length === 0) {
+            availableQuizzes = [...ALL_QUIZZES]; // 퀴즈 다 풀면 다시 채우기
         }
         
-        gameContainer.appendChild(effect);
-        
-        setTimeout(() => {
-            effect.remove();
-        }, 500); // 애니메이션 지속 시간과 동일하게
+        setupQuizScreen();
+        showScreen('quiz');
+        playSound(audio.bgmQuiz, true);
     }
 
-    // --- 퀴즈 로직 ---
-    function startQuiz() {
-        showScreen('quiz-screen');
-        playBgm('quiz');
-        
-        const quiz = QUIZZES[currentOpponentIndex];
-        document.getElementById('quiz-question').textContent = quiz.question;
-        
-        const optionsContainer = document.getElementById('quiz-options');
-        optionsContainer.innerHTML = '';
-        
-        quiz.options.forEach((option, index) => {
+    function setupQuizScreen() {
+        document.getElementById('stage-title-quiz').textContent = `스테이지 ${currentStage} - AI 윤리 퀴즈`;
+        document.getElementById('quiz-pokemon-img').src = player.img;
+        document.getElementById('quiz-pokemon-name').textContent = player.name;
+        document.getElementById('question-number').textContent = `퀴즈 ${TOTAL_STAGES - availableQuizzes.length}/${TOTAL_STAGES}`;
+        document.getElementById('question-text').textContent = currentQuiz.question;
+
+        const answerOptions = document.getElementById('answer-options');
+        answerOptions.innerHTML = '';
+        currentQuiz.options.forEach((option, index) => {
             const button = document.createElement('button');
             button.className = 'quiz-option';
             button.textContent = option;
-            button.addEventListener('click', () => checkAnswer(index));
-            optionsContainer.appendChild(button);
+            button.onclick = () => checkAnswer(index, button);
+            answerOptions.appendChild(button);
+        });
+        document.getElementById('feedback-message').textContent = '';
+    }
+
+    function checkAnswer(selectedIndex, button) {
+        document.querySelectorAll('.quiz-option').forEach(btn => btn.classList.add('disabled'));
+
+        const isCorrect = currentQuiz.options[selectedIndex] === currentQuiz.answer;
+        
+        if (isCorrect) {
+            playSound(audio.sfxCorrect);
+            button.classList.add('correct');
+            document.getElementById('feedback-message').textContent = '정답입니다!';
+            document.getElementById('explanation-title').textContent = '정답! 👍';
+            document.getElementById('explanation-title').className = 'text-3xl font-bold mb-4 text-center text-green-500';
+        } else {
+            playSound(audio.sfxIncorrect);
+            button.classList.add('incorrect');
+            const correctIndex = currentQuiz.options.findIndex(opt => opt === currentQuiz.answer);
+            document.querySelectorAll('.quiz-option')[correctIndex].classList.add('correct');
+            document.getElementById('feedback-message').textContent = '오답입니다...';
+            document.getElementById('explanation-title').textContent = '오답... 😥';
+            document.getElementById('explanation-title').className = 'text-3xl font-bold mb-4 text-center text-red-500';
+        }
+        
+        document.getElementById('explanation-text').textContent = currentQuiz.explanation;
+
+        setTimeout(() => {
+            showModal('explanation');
+        }, 1500);
+    }
+    
+    function handlePostQuiz() {
+        showModal('explanation', false);
+        const isCorrect = document.querySelector('.quiz-option.correct.disabled') !== null;
+
+        if (isCorrect) {
+            learnNewSkill();
+        } else {
+            startBattle();
+        }
+    }
+
+    function learnNewSkill() {
+        const potentialSkills = Object.values(SKILLS).flat().filter(skill => 
+            player.types.includes(skill.type) && !learnedSkills.some(ls => ls.name === skill.name) && skill.power > 0
+        );
+        
+        if (potentialSkills.length === 0) {
+            startBattle(); // 배울 스킬이 없으면 바로 배틀 시작
+            return;
+        }
+
+        const newSkill = potentialSkills[Math.floor(Math.random() * potentialSkills.length)];
+
+        if (learnedSkills.length < MAX_SKILLS) {
+            learnedSkills.push(newSkill);
+            startBattle();
+        } else {
+            // 기술이 꽉 찼을 때 교체 로직
+            showModal('forgetSkill');
+            document.getElementById('new-skill-info').textContent = `새로운 기술: ${newSkill.name}`;
+            const forgetChoices = document.getElementById('forget-skill-choices');
+            forgetChoices.innerHTML = '';
+            learnedSkills.forEach((skill, index) => {
+                const btn = document.createElement('button');
+                btn.className = `skill-button text-white font-bold py-2 px-4 rounded-lg w-full type-${getSkillTypeClass(skill.type)}`;
+                btn.textContent = `${skill.name} (위력: ${skill.power || '-'})`;
+                btn.onclick = () => {
+                    learnedSkills[index] = newSkill;
+                    showModal('forgetSkill', false);
+                    startBattle();
+                };
+                forgetChoices.appendChild(btn);
+            });
+        }
+    }
+
+    // --- Battle Logic ---
+    function startBattle() {
+        setupBattleScreen();
+        showScreen('battle');
+        playSound(audio.bgmBattle, true);
+        updateBattleLog(`${opponent.name}(이)가 나타났다!`);
+    }
+
+    function setupBattleScreen() {
+        document.getElementById('stage-title-battle').textContent = `스테이지 ${currentStage} 배틀`;
+        
+        // Player
+        document.getElementById('player-name').textContent = player.name;
+        document.getElementById('player-img').src = player.img;
+        
+        // Opponent
+        document.getElementById('opponent-name').textContent = opponent.name;
+        document.getElementById('opponent-img').src = opponent.img;
+        
+        updateHpBars();
+        updateSkillButtons();
+    }
+
+    function updateHpBars() {
+        const updateBar = (pokemon, elementId) => {
+            const hpBar = document.getElementById(elementId);
+            const percentage = (pokemon.hp / pokemon.maxHp) * 100;
+            hpBar.style.width = `${percentage}%`;
+            hpBar.textContent = `${Math.ceil(pokemon.hp)}/${pokemon.maxHp}`;
+            
+            hpBar.classList.remove('bg-green-500', 'bg-yellow-500', 'bg-red-500');
+            if (percentage > 50) {
+                hpBar.classList.add('bg-green-500');
+            } else if (percentage > 20) {
+                hpBar.classList.add('bg-yellow-500');
+            } else {
+                hpBar.classList.add('bg-red-500');
+            }
+        };
+        updateBar(player, 'player-hp');
+        updateBar(opponent, 'opponent-hp');
+    }
+    
+    function getSkillTypeClass(type) {
+        const typeMap = { '불': 'fire', '물': 'water', '풀': 'grass', '전기': 'electric', '얼음': 'ice', '격투': 'fighting', '독': 'poison', '땅': 'ground', '비행': 'flying', '에스퍼': 'psychic', '벌레': 'bug', '바위': 'rock', '고스트': 'ghost', '드래곤': 'dragon', '강철': 'steel', '페어리': 'fairy', '노말': 'normal', '악': 'dark' };
+        return typeMap[type] || 'normal';
+    }
+
+    function updateSkillButtons() {
+        const container = document.getElementById('skill-buttons');
+        container.innerHTML = '';
+        learnedSkills.forEach(skill => {
+            const button = document.createElement('button');
+            const typeClass = getSkillTypeClass(skill.type);
+            button.className = `skill-button text-white font-bold py-3 px-2 rounded-lg text-sm sm:text-base type-${typeClass}`;
+            button.textContent = skill.name;
+            button.onclick = () => playerTurn(skill);
+            container.appendChild(button);
         });
     }
 
-    function checkAnswer(selectedIndex) {
-        if (quizAnswered) return;
-        quizAnswered = true;
+    function updateBattleLog(message) {
+        document.getElementById('battle-log').textContent = message;
+    }
 
-        const quiz = QUIZZES[currentOpponentIndex];
-        const options = document.querySelectorAll('.quiz-option');
+    function playerTurn(skill) {
+        document.getElementById('skill-buttons').classList.add('pointer-events-none', 'opacity-50');
+        
+        const damage = calculateDamage(skill, player, opponent);
+        opponent.hp = Math.max(0, opponent.hp - damage);
+        
+        animateAttack(true, skill.type);
+        updateBattleLog(`${player.name}의 ${skill.name} 공격!`);
+        
+        setTimeout(() => {
+            playSound(audio.sfxAttack);
+            document.getElementById('opponent-img').classList.add('pokemon-hit');
+            updateHpBars();
+            updateBattleLog(`${opponent.name}에게 ${damage}의 데미지!`);
+            setTimeout(() => {
+                document.getElementById('opponent-img').classList.remove('pokemon-hit');
+                if (opponent.hp <= 0) {
+                    battleEnd(true);
+                } else {
+                    opponentTurn();
+                }
+            }, 1000);
+        }, 500);
+    }
 
-        if (selectedIndex === quiz.answer) {
-            options[selectedIndex].classList.add('correct');
-            playerPokemon.hp = Math.min(100, playerPokemon.hp + 30); // 정답 맞추면 체력 30 회복
-             setMessage('정답! 윤리적 통찰력이 상승했다!');
-        } else {
-            options[selectedIndex].classList.add('incorrect');
-            options[quiz.answer].classList.add('correct'); // 정답 표시
-            setMessage('오답... 더 깊은 고민이 필요해 보인다.');
-        }
+    function opponentTurn() {
+        const skill = opponent.skills[Math.floor(Math.random() * opponent.skills.length)];
+        const damage = calculateDamage(skill, opponent, player);
+        player.hp = Math.max(0, player.hp - damage);
+
+        updateBattleLog(`${opponent.name}의 ${skill.name} 공격!`);
+        animateAttack(false, skill.type);
 
         setTimeout(() => {
-            currentOpponentIndex++;
-            startBattle();
-        }, 2500);
+            playSound(audio.sfxAttack);
+            document.getElementById('player-img').classList.add('pokemon-hit');
+            updateHpBars();
+            updateBattleLog(`${player.name}에게 ${damage}의 데미지!`);
+            setTimeout(() => {
+                document.getElementById('player-img').classList.remove('pokemon-hit');
+                if (player.hp <= 0) {
+                    battleEnd(false);
+                } else {
+                    document.getElementById('skill-buttons').classList.remove('pointer-events-none', 'opacity-50');
+                    updateBattleLog('어떻게 할까?');
+                }
+            }, 1000);
+        }, 1500);
+    }
+
+    function calculateDamage(skill, attacker, defender) {
+        if (!skill.power) return 0;
+        let effectiveness = 1;
+        defender.types.forEach(type => {
+            effectiveness *= TYPE_CHART[skill.type]?.[type] ?? 1;
+        });
+        return Math.floor(skill.power * effectiveness * (0.8 + Math.random() * 0.4));
     }
     
-    // --- 게임 종료/재시작 로직 ---
-    function gameEnd(isWin) {
-        showScreen('end-screen');
-        playBgm('none'); // BGM 정지
-        const title = document.getElementById('end-title');
-        const message = document.getElementById('end-message');
+    function animateAttack(isPlayerAttack, type) {
+        const overlay = document.getElementById('attack-animation-overlay');
+        const effect = document.createElement('div');
+        const typeClass = getSkillTypeClass(type);
+        effect.className = `attack-effect type-${type}`;
         
-        if (isWin) {
-            title.textContent = '🎉 축하합니다! 🎉';
-            message.textContent = 'AI 윤리 챔피언이 되셨습니다!';
+        const colorMap = { 'fire': 'rgba(255, 69, 0, 0.7)', 'water': 'rgba(30, 144, 255, 0.7)', 'grass': 'rgba(50, 205, 50, 0.7)', 'electric': 'rgba(255, 215, 0, 0.7)', 'ghost': 'rgba(75, 0, 130, 0.7)', 'psychic': 'rgba(255, 20, 147, 0.7)' };
+        effect.style.backgroundColor = colorMap[typeClass] || 'rgba(128, 128, 128, 0.7)';
+
+        if (isPlayerAttack) {
+            effect.style.top = '25%';
+            effect.style.right = '15%';
         } else {
-            title.textContent = ' GAME OVER ';
-            message.textContent = 'AI 윤리 포켓몬의 길은 멀고도 험하군요...';
+            effect.style.top = '55%';
+            effect.style.left = '15%';
+        }
+        overlay.appendChild(effect);
+        setTimeout(() => effect.remove(), 400);
+    }
+
+    function battleEnd(isWin) {
+        if (isWin) {
+            playSound(audio.sfxWin);
+            updateBattleLog(`${opponent.name}를 쓰러뜨렸다!`);
+            setTimeout(() => {
+                document.getElementById('stage-clear-message').textContent = `스테이지 ${currentStage} 클리어! 다음 스테이지로 이동합니다.`;
+                showModal('stageClear');
+            }, 1500);
+        } else {
+            gameEnd(false);
+        }
+    }
+    
+    // --- Game End & Hall of Fame ---
+    function gameEnd(isWin) {
+        showScreen('battle'); // Keep battle screen visible behind modal
+        if (isWin) {
+            playSound(audio.sfxWin);
+            showModal('record');
+        } else {
+            playSound(audio.sfxLose);
+            document.getElementById('result-title').textContent = '패배...';
+            document.getElementById('result-message').textContent = 'AI 윤리의 길은 멀고도 험하구나...';
+            showModal('result');
         }
     }
 
-    // --- 이벤트 리스너 연결 ---
-    startButton.addEventListener('click', initGame);
-    restartButton.addEventListener('click', () => {
-        // 상태 초기화 후 시작화면으로
-        playerPokemon = null;
-        opponentPokemon = null;
-        currentOpponentIndex = 0;
-        showScreen('start-screen');
-    });
+    function saveRecord() {
+        const nickname = document.getElementById('nickname-input').value.trim();
+        if (!nickname) {
+            alert('닉네임을 입력해주세요!');
+            return;
+        }
+        const record = {
+            date: new Date().toLocaleDateString(),
+            nickname: nickname,
+            stage: `스테이지 ${currentStage} 클리어`,
+        };
+        hallOfFame.push(record);
+        hallOfFame.sort((a, b) => b.stage.localeCompare(a.stage) || new Date(b.date) - new Date(a.date));
+        localStorage.setItem('ai-ethics-pokemon-hof', JSON.stringify(hallOfFame));
+        
+        updateHallOfFameDisplay();
+        showModal('record', false);
+        showModal('hallOfFame');
+    }
 
-    // --- 초기 실행 ---
-    showScreen('start-screen');
+    function loadHallOfFame() {
+        hallOfFame = JSON.parse(localStorage.getItem('ai-ethics-pokemon-hof')) || [];
+        updateHallOfFameDisplay();
+    }
+
+    function updateHallOfFameDisplay() {
+        const tbody = document.getElementById('hall-of-fame-body');
+        tbody.innerHTML = '';
+        if (hallOfFame.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4">아직 명예의 전당에 등록된 기록이 없습니다.</td></tr>';
+            return;
+        }
+        hallOfFame.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="p-2">${r.date}</td><td class="p-2 font-bold">${r.nickname}</td><td class="p-2">${r.stage}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // --- Start the game ---
+    init();
 });
