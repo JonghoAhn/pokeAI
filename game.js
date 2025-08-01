@@ -6,31 +6,6 @@ const QUESTIONS_PER_STAGE = 2;
 let correctAnswersThisStage = 0;
 let battleLogTimeout;
 
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
-
-function resizeCanvas() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  const gameRatio = canvas.width / canvas.height;
-  let newWidth = w;
-  let newHeight = w / gameRatio;
-
-  if (newHeight > h) {
-    newHeight = h;
-    newWidth = h * gameRatio;
-  }
-
-  canvas.style.width = newWidth + 'px';
-  canvas.style.height = newHeight + 'px';
-}
-
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-
-
 // --- DOM Elements ---
 const screens = { start: document.getElementById('start-screen'), selection: document.getElementById('selection-screen'), quiz: document.getElementById('quiz-screen'), battle: document.getElementById('battle-screen') };
 const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal'), record: document.getElementById('record-modal'), hallOfFame: document.getElementById('hall-of-fame-modal') };
