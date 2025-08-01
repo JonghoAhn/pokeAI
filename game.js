@@ -5,10 +5,11 @@ let playerInventory = { potion: 0 };
 const QUESTIONS_PER_STAGE = 2;
 let correctAnswersThisStage = 0;
 let battleLogTimeout;
+let OPPONENT_POOL = []; // Will be populated by PokeAPI
 
 // --- DOM Elements ---
 const screens = { start: document.getElementById('start-screen'), selection: document.getElementById('selection-screen'), quiz: document.getElementById('quiz-screen'), battle: document.getElementById('battle-screen') };
-const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal'), record: document.getElementById('record-modal'), hallOfFame: document.getElementById('hall-of-fame-modal'), levelUp: document.getElementById('level-up-modal') };
+const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal'), record: document.getElementById('record-modal'), hallOfFame: document.getElementById('hall-of-fame-modal'), levelUp: document.getElementById('level-up-modal'), ending: document.getElementById('ending-modal') };
 const bgm = { battle: document.getElementById('bgm-battle'), quiz: document.getElementById('bgm-quiz') };
 
 // --- Screen & Modal Management ---
@@ -33,6 +34,60 @@ function shuffleArray(array) {
     return array;
 }
 
+// --- PokeAPI and Data Initialization ---
+async function initializeGameData() {
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const startButton = document.getElementById('start-game-button');
+    
+    loadingIndicator.style.display = 'block';
+    startButton.disabled = true;
+
+    const typeTranslations = { 'normal': '노말', 'fire': '불', 'water': '물', 'electric': '전기', 'grass': '풀', 'ice': '얼음', 'fighting': '격투', 'poison': '독', 'ground': '땅', 'flying': '비행', 'psychic': '에스퍼', 'bug': '벌레', 'rock': '바위', 'ghost': '고스트', 'dragon': '드래곤', 'dark': '악', 'steel': '강철', 'fairy': '페어리' };
+
+    try {
+        const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=151');
+        const data = await response.json();
+        const pokemonPromises = data.results.map(p => fetch(p.url).then(res => res.json()));
+        const pokemonDetails = await Promise.all(pokemonPromises);
+
+        const speciesPromises = pokemonDetails.map(p => fetch(p.species.url).then(res => res.json()));
+        const speciesDetails = await Promise.all(speciesPromises);
+
+        OPPONENT_POOL = pokemonDetails.map((p, index) => {
+            const koreanNameObj = speciesDetails[index].names.find(name => name.language.name === 'ko');
+            const types = p.types.map(t => typeTranslations[t.type.name] || t.type.name);
+            const hp = p.stats.find(s => s.stat.name === 'hp').base_stat;
+            
+            let skills = [];
+            types.forEach(type => {
+                const availableSkills = SKILLS[type] || [];
+                if (availableSkills.length > 0) {
+                    skills.push(availableSkills[Math.floor(Math.random() * availableSkills.length)]);
+                }
+            });
+            if (skills.length === 0) skills.push(DEFAULT_SKILL);
+            
+            return {
+                id: p.name,
+                name: koreanNameObj ? koreanNameObj.name : p.name,
+                hp: Math.floor(hp * 1.2 + 50),
+                maxHp: Math.floor(hp * 1.2 + 50),
+                img: p.sprites.other['official-artwork'].front_default,
+                types: types,
+                skills: [...new Set(skills)] // Remove duplicate skills
+            };
+        });
+        
+        loadingIndicator.style.display = 'none';
+        startButton.disabled = false;
+
+    } catch (error) {
+        console.error("Error fetching Pokémon data:", error);
+        loadingIndicator.innerHTML = '<p class="text-red-500">데이터 로딩 실패! 페이지를 새로고침 해주세요.</p>';
+    }
+}
+
+
 // --- Game Setup ---
 function calculateMatchupScore(playerTypes, opponentTypes) {
     let opponentEffectiveness = 1;
@@ -47,30 +102,23 @@ function calculateMatchupScore(playerTypes, opponentTypes) {
 
 function generateStages(player) {
     let stages = [];
-    const legendary_ids = ['articuno', 'zapdos', 'moltres', 'tyranitar'];
-    const easy_ids = ['rattata', 'pidgey', 'clefairy'];
-    const normalPool = OPPONENT_POOL.filter(p => !legendary_ids.includes(p.id) && !easy_ids.includes(p.id));
-    const easyPool = OPPONENT_POOL.filter(p => easy_ids.includes(p.id));
+    const legendary_ids = ['articuno', 'zapdos', 'moltres', 'mewtwo', 'mew'];
+    const normalPool = OPPONENT_POOL.filter(p => !legendary_ids.includes(p.id));
     const legendaryPool = OPPONENT_POOL.filter(p => legendary_ids.includes(p.id));
     let usedOpponentIds = new Set();
     const opponentsWithScores = normalPool.map(opp => ({...opp, score: calculateMatchupScore(player.types, opp.types)}));
     const stageDifficultyFilters = [ opp => opp.score <= 1, opp => opp.score <= 1, opp => opp.score > 1 && opp.score < 4, opp => opp.score > 1 && opp.score < 4, ];
     const stageNames = ["초보 트레이너", "두번째 트레이너", "체육관 관장", "엘리트 트레이너", "사천왕", "라이벌", "챔피언"];
-    for (let i = 0; i < 2; i++) {
-        let pool = easyPool.filter(opp => !usedOpponentIds.has(opp.id));
-        if (pool.length === 0) pool = easyPool;
+    
+    // Stages 1-6
+    for (let i = 0; i < 6; i++) {
+        let pool = opponentsWithScores.filter(opp => !usedOpponentIds.has(opp.id));
         const selectedOpponent = pool[Math.floor(Math.random() * pool.length)];
         usedOpponentIds.add(selectedOpponent.id);
         stages.push({ name: `Stage ${i + 1}: ${stageNames[i]}`, opponent: selectedOpponent });
     }
-    for (let i = 0; i < 4; i++) {
-        let pool = opponentsWithScores.filter(opp => !usedOpponentIds.has(opp.id));
-        let filteredPool = pool.filter(stageDifficultyFilters[i]);
-        pool = filteredPool.length > 0 ? filteredPool : (pool.length > 0 ? pool : opponentsWithScores);
-        const selectedOpponent = pool[Math.floor(Math.random() * pool.length)];
-        usedOpponentIds.add(selectedOpponent.id);
-        stages.push({ name: `Stage ${i + 3}: ${stageNames[i+2]}`, opponent: selectedOpponent });
-    }
+    
+    // Stage 7 (Final Boss)
     const finalBoss = legendaryPool[Math.floor(Math.random() * legendaryPool.length)];
     stages.push({ name: `Stage 7: ${stageNames[6]}`, opponent: finalBoss });
     return stages;
@@ -120,7 +168,7 @@ function startStage() {
     bgm.battle.pause();
     bgm.quiz.currentTime = 0;
     bgm.quiz.play().catch(e => {});
-    const startIndex = currentStage * QUESTIONS_PER_STAGE;
+    const startIndex = (currentStage * QUESTIONS_PER_STAGE) % masterShuffledQuizzes.length;
     shuffledQuizzes = masterShuffledQuizzes.slice(startIndex, startIndex + QUESTIONS_PER_STAGE);
     currentQuestionIndex = 0;
     document.getElementById('stage-title-quiz').textContent = gameStages[currentStage].name;
@@ -141,7 +189,10 @@ function updateSkillProgress() {
 
 function loadQuestion() {
     const quiz = shuffledQuizzes[currentQuestionIndex];
-    if (!quiz) { startBattle(); return; }
+    if (!quiz) { 
+        startBattle(); 
+        return; 
+    }
     document.getElementById('question-number').textContent = `퀴즈 ${currentQuestionIndex + 1} / ${QUESTIONS_PER_STAGE}`;
     document.getElementById('question-text').textContent = quiz.question;
     const container = document.getElementById('answer-options');
@@ -449,9 +500,13 @@ function playerAttack(skillIndex) {
     }
 
     performAttack(playerPokemon, opponentPokemon, skill, () => {
-        if (opponentPokemon.hp <= 0) winBattle();
-        else if (playerPokemon.hp <= 0) loseBattle();
-        else opponentAttack();
+        if (opponentPokemon.hp <= 0) {
+            winBattle();
+        } else if (playerPokemon.hp <= 0) {
+            loseBattle();
+        } else {
+            setTimeout(opponentAttack, 1000); // Add 1-second delay before opponent attacks
+        }
     });
 }
 
@@ -476,7 +531,7 @@ function usePotion() {
         playerInventory.potion--;
         const healAmount = Math.floor(playerPokemon.maxHp * 0.3);
         playerPokemon.hp = Math.min(playerPokemon.maxHp, playerPokemon.hp + healAmount);
-        battleLogUpdate(`${playerPokemon.name}은(는) 상처약을 사용했다!`, 1500, opponentAttack);
+        battleLogUpdate(`${playerPokemon.name}은(는) 상처약을 사용했다!`, 1500, () => setTimeout(opponentAttack, 1000));
         updateBattleUI();
     }
 }
@@ -512,7 +567,6 @@ function choosePotionBonus() {
 function proceedToNextStage() {
     hideModals();
     currentStage++;
-    saveRecord(false);
     if (currentStage >= gameStages.length) {
         winGame();
     } else {
@@ -523,28 +577,32 @@ function proceedToNextStage() {
 
 function loseBattle() {
     isBattling = false;
-    saveRecord(false);
     document.getElementById('result-title').textContent = "패배...";
     document.getElementById('result-message').textContent = `아쉽게도 ${opponentPokemon.name}에게 패배했습니다.`;
     showModal('result');
 }
 
 function winGame() {
-    document.getElementById('result-title').textContent = "🎉 최종 승리! 🎉";
-    document.getElementById('result-message').textContent = `모든 상대를 이기고 챔피언이 되었습니다! 명예의 전당에 이름을 기록하세요.`;
-    showModal('record');
+    showModal('ending');
 }
 
-function resetGame() { location.reload(); }
+function resetGame() { 
+    location.reload(); 
+}
 
-function saveRecord(isFinal = true) {
+function saveRecord() {
     try {
         const nickname = document.getElementById('nickname-input').value || '트레이너';
         const records = JSON.parse(localStorage.getItem('hallOfFame') || '[]');
-        const newRecord = { date: new Date().toLocaleDateString(), nickname: nickname, clearedStages: `Stage ${currentStage}`, pokemon: playerPokemon.name };
+        const newRecord = { 
+            date: new Date().toLocaleDateString(), 
+            nickname: nickname, 
+            pokemon: playerPokemon.name 
+        };
         records.unshift(newRecord);
         localStorage.setItem('hallOfFame', JSON.stringify(records.slice(0, 20)));
-        if (isFinal) { hideModals(); showHallOfFame(); }
+        hideModals(); 
+        showHallOfFame();
     } catch (e) { console.error("Could not save record to localStorage:", e); }
 }
 
@@ -557,7 +615,7 @@ function showHallOfFame() {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4">아직 기록이 없습니다.</td></tr>';
         } else {
             records.forEach(r => {
-                tbody.innerHTML += `<tr><td class="p-2 border-t">${r.date}</td><td class="p-2 border-t">${r.nickname} (${r.pokemon})</td><td class="p-2 border-t">${r.clearedStages}</td></tr>`;
+                tbody.innerHTML += `<tr><td class="p-2 border-t">${r.date}</td><td class="p-2 border-t">${r.nickname}</td><td class="p-2 border-t">${r.pokemon}</td></tr>`;
             });
         }
     } catch (e) { console.error("Could not load records from localStorage:", e); }
@@ -566,18 +624,18 @@ function showHallOfFame() {
 
 // --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
-    // No scaling logic needed anymore, CSS handles responsiveness
+    initializeGameData();
     showScreen('start');
 
-    // Event listeners
     document.getElementById('start-game-button').addEventListener('click', () => { initSelectionScreen(); showScreen('selection'); });
     document.getElementById('next-question-button').addEventListener('click', proceedAfterExplanation);
     document.getElementById('next-stage-button').addEventListener('click', startStage);
     document.getElementById('play-again-button').addEventListener('click', resetGame);
     document.getElementById('cancel-forget-button').addEventListener('click', startBattle);
     document.getElementById('hall-of-fame-button').addEventListener('click', showHallOfFame);
-    document.getElementById('submit-record-button').addEventListener('click', () => saveRecord(true));
-    document.getElementById('close-hof-button').addEventListener('click', hideModals);
+    document.getElementById('submit-record-button').addEventListener('click', saveRecord);
+    document.getElementById('close-hof-button').addEventListener('click', resetGame); // Close HoF and restart
+    document.getElementById('go-to-hof-button').addEventListener('click', () => showModal('record'));
     document.getElementById('type-chart-icon').addEventListener('click', () => showModal('typeChart'));
     document.getElementById('close-type-chart-button').addEventListener('click', hideModals);
     document.getElementById('hp-bonus-button').addEventListener('click', chooseHpBonus);
