@@ -130,10 +130,23 @@
         <div id="stage-clear-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30 p-4">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-sm">
                 <h2 class="text-3xl font-bold mb-4 text-blue-500">🎉 스테이지 클리어! 🎉</h2>
-                <div id="stage-clear-message" class="text-gray-600 mb-6"></div>
+                <p id="stage-clear-message" class="text-gray-600 mb-6"></p>
                 <button id="next-stage-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-lg">다음 스테이지로</button>
             </div>
         </div>
+
+        <!-- New Level Up Modal -->
+        <div id="level-up-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30 p-4">
+            <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-sm">
+                <h2 class="text-3xl font-bold mb-4 text-green-500">✨ 성장 보너스! ✨</h2>
+                <p class="text-gray-600 mb-6">스테이지 클리어! 보상을 선택하세요.</p>
+                <div class="grid grid-cols-1 gap-4">
+                    <button id="hp-bonus-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-lg">최대 HP +10</button>
+                    <button id="potion-bonus-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg">상처약 1개 획득</button>
+                </div>
+            </div>
+        </div>
+
         <div id="result-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30 p-4">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-sm">
                 <h2 id="result-title" class="text-4xl font-bold mb-4"></h2>

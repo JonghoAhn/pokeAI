@@ -12,7 +12,7 @@ const DESIGN_HEIGHT = 1024;
 
 // --- DOM Elements ---
 const screens = { start: document.getElementById('start-screen'), selection: document.getElementById('selection-screen'), quiz: document.getElementById('quiz-screen'), battle: document.getElementById('battle-screen') };
-const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal'), record: document.getElementById('record-modal'), hallOfFame: document.getElementById('hall-of-fame-modal') };
+const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal'), record: document.getElementById('record-modal'), hallOfFame: document.getElementById('hall-of-fame-modal'), levelUp: document.getElementById('level-up-modal') };
 const bgm = { battle: document.getElementById('bgm-battle'), quiz: document.getElementById('bgm-quiz') };
 
 // --- Scaling and Resize Logic ---
@@ -515,13 +515,27 @@ function applyEffect(effect, attacker, defender) {
 // --- Game End and Records ---
 function winBattle() {
     isBattling = false;
-    currentStage++;
+    showModal('levelUp');
+}
+
+function chooseHpBonus() {
+    playerPokemon.maxHp += 10;
+    proceedToNextStage();
+}
+
+function choosePotionBonus() {
     playerInventory.potion++;
+    proceedToNextStage();
+}
+
+function proceedToNextStage() {
+    hideModals();
+    currentStage++;
     saveRecord(false);
     if (currentStage >= gameStages.length) {
         winGame();
     } else {
-        document.getElementById('stage-clear-message').innerHTML = `다음 상대는 ${gameStages[currentStage].name} 입니다.<br><span class="text-green-500 font-bold mt-2 block">상처약 1개를 획득했다!</span>`;
+        document.getElementById('stage-clear-message').textContent = `다음 상대는 ${gameStages[currentStage].name} 입니다.`;
         showModal('stageClear');
     }
 }
@@ -587,6 +601,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('close-hof-button').addEventListener('click', hideModals);
     document.getElementById('type-chart-icon').addEventListener('click', () => showModal('typeChart'));
     document.getElementById('close-type-chart-button').addEventListener('click', hideModals);
+    document.getElementById('hp-bonus-button').addEventListener('click', chooseHpBonus);
+    document.getElementById('potion-bonus-button').addEventListener('click', choosePotionBonus);
 
     // Volume controls
     const volumeSlider = document.getElementById('volume-slider');
