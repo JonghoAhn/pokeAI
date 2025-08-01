@@ -1,59 +1,65 @@
 // --- Data Settings ---
 // This file contains all the necessary data for the game, including Pokemon stats, skills, type charts, and quiz questions.
 
+const TYPE_CHART = {
+    '노말': { strong: [], weak: ['바위', '강철'], immune: ['고스트'] },
+    '불꽃': { strong: ['풀', '얼음', '벌레', '강철'], weak: ['불꽃', '물', '바위', '드래곤'], immune: [] },
+    '물': { strong: ['불꽃', '땅', '바위'], weak: ['물', '풀', '드래곤'], immune: [] },
+    '풀': { strong: ['물', '땅', '바위'], weak: ['불꽃', '풀', '독', '비행', '벌레', '드래곤', '강철'], immune: [] },
+    '전기': { strong: ['물', '비행'], weak: ['풀', '전기', '드래곤'], immune: ['땅'] },
+    '얼음': { strong: ['풀', '땅', '비행', '드래곤'], weak: ['불꽃', '물', '얼음', '강철'], immune: [] },
+    '격투': { strong: ['노말', '얼음', '바위', '악', '강철'], weak: ['독', '비행', '에스퍼', '벌레', '페어리'], immune: ['고스트'] },
+    '독': { strong: ['풀', '페어리'], weak: ['독', '땅', '바위', '고스트'], immune: ['강철'] },
+    '땅': { strong: ['불꽃', '전기', '독', '바위', '강철'], weak: ['풀', '벌레'], immune: ['비행'] },
+    '비행': { strong: ['풀', '격투', '벌레'], weak: ['전기', '바위', '강철'], immune: [] },
+    '에스퍼': { strong: ['격투', '독'], weak: ['에스퍼', '강철'], immune: ['악'] },
+    '벌레': { strong: ['풀', '에스퍼', '악'], weak: ['불꽃', '격투', '독', '비행', '고스트', '강철', '페어리'], immune: [] },
+    '바위': { strong: ['불꽃', '얼음', '비행', '벌레'], weak: ['격투', '땅', '강철'], immune: [] },
+    '고스트': { strong: ['에스퍼', '고스트'], weak: ['악'], immune: ['노말'] },
+    '드래곤': { strong: ['드래곤'], weak: ['강철'], immune: ['페어리'] },
+    '악': { strong: ['에스퍼', '고스트'], weak: ['격투', '악', '페어리'], immune: [] },
+    '강철': { strong: ['얼음', '바위', '페어리'], weak: ['불꽃', '물', '전기', '강철'], immune: [] },
+    '페어리': { strong: ['격투', '드래곤', '악'], weak: ['불꽃', '독', '강철'], immune: [] }
+};
+
 const POKEMONS = {
     'pikachu': { name: '피카츄', hp: 100, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png', types: ['전기'] },
     'bulbasaur': { name: '이상해씨', hp: 110, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png', types: ['풀', '독'] },
     'charmander': { name: '파이리', hp: 95, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png', types: ['불'] },
     'squirtle': { name: '꼬부기', hp: 105, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png', types: ['물'] },
     'machamp': { name: '괴력몬', hp: 120, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/68.png', types: ['격투'] },
-    'alakazam': { name: '후딘', hp: 90, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/65.png', types: ['에스퍼'] },
-    'gengar': { name: '팬텀', hp: 100, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png', types: ['고스트', '독'] },
-    'gyarados': { name: '갸라도스', hp: 130, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/130.png', types: ['물', '비행'] },
+    'alakazam': { name: '후딘', hp: 90, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/66.png', types: ['에스퍼'] },
+    'gengar': { name: '팬텀', hp: 98, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png', types: ['고스트', '독'] },
     'snorlax': { name: '잠만보', hp: 150, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png', types: ['노말'] },
-    'dragonite': { name: '망나뇽', hp: 140, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/149.png', types: ['드래곤', '비행'] },
-    'metagross': { name: '메타그로스', hp: 135, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/376.png', types: ['강철', '에스퍼'] },
-    'lucario': { name: '루카리오', hp: 110, img: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/448.png', types: ['격투', '강철'] }
 };
 
 const SKILLS = {
-    '전기': [{ name: '10만볼트', power: 30, type: '전기' }, { name: '번개', power: 45, type: '전기' }, { name: '전기자석파', type: '전기', effect: { type: 'status', status: 'paralysis', chance: 0.9 }, description: "상대를 마비시켜 가끔 행동불능으로 만듭니다." }],
-    '풀': [{ name: '잎날가르기', power: 30, type: '풀' }, { name: '솔라빔', power: 40, type: '풀' }],
-    '독': [{ name: '오물폭탄', power: 30, type: '독' }, { name: '독엄니', power: 25, type: '독' }],
-    '불': [{ name: '화염방사', power: 30, type: '불' }, { name: '불대문자', power: 45, type: '불' }],
-    '물': [{ name: '파도타기', power: 30, type: '물' }, { name: '하이드로펌프', power: 40, type: '물' }],
-    '격투': [{ name: '인파이트', power: 40, type: '격투' }, { name: '엄청난힘', power: 35, type: '격투' }],
-    '에스퍼': [{ name: '사이코키네시스', power: 35, type: '에스퍼' }, { name: '미래예지', power: 40, type: '에스퍼' }],
-    '고스트': [{ name: '섀도볼', power: 35, type: '고스트' }, { name: '병상첨병', power: 30, type: '고스트' }],
-    '비행': [{ name: '공중날기', power: 30, type: '비행' }, { name: '폭풍', power: 40, type: '비행' }],
-    '노말': [{ name: '몸통박치기', power: 20, type: '노말' }, { name: '전광석화', power: 25, type: '노말' }, { name: '이판사판태클', power: 35, type: '노말' }, { name: '파괴광선', power: 50, type: '노말' }, { name: '울음소리', type: '노말', effect: { type: 'stat', target: 'opponent', stat: 'attack', change: -1 }, description: "상대의 공격력을 낮춥니다." }, { name: '칼춤', type: '노말', effect: { type: 'stat', target: 'player', stat: 'attack', change: 2 }, description: "자신의 공격력을 크게 높입니다." }],
-    '드래곤': [{ name: '드래곤크루', power: 35, type: '드래곤' }, { name: '용성군', power: 45, type: '드래곤' }],
-    '강철': [{ name: '아이언헤드', power: 30, type: '강철' }, { name: '코멧펀치', power: 40, type: '강철' }],
-    '바위': [{ name: '스톤샤워', power: 25, type: '바위' }, { name: '스톤에지', power: 40, type: '바위' }],
-    '땅': [{ name: '지진', power: 30, type: '땅' }],
-    '얼음': [{ name: '냉동빔', power: 35, type: '얼음' }, { name: '눈보라', power: 45, type: '얼음' }],
-    '악': [{ name: '깨물어부수기', power: 35, type: '악' }],
-    '벌레': [{ name: '벌레의야단법석', power: 30, type: '벌레' }],
-    '페어리': [{ name: '문포스', power: 35, type: '페어리' }]
+    '몸통박치기': { name: '몸통박치기', damage: 40, accuracy: 1, type: '노말', effect: null, description: '단단한 몸으로 부딪혀 공격한다.' },
+    '화염방사': { name: '화염방사', damage: 90, accuracy: 1, type: '불꽃', effect: null, description: '맹렬한 불꽃을 상대에게 발사하여 공격한다.' },
+    '물대포': { name: '물대포', damage: 40, accuracy: 1, type: '물', effect: null, description: '입에서 물을 세차게 발사하여 공격한다.' },
+    '하이드로펌프': { name: '하이드로펌프', damage: 110, accuracy: 0.8, type: '물', effect: null, description: '엄청난 기세로 물을 발사하여 공격한다. 명중률이 조금 낮다.' },
+    '덩굴채찍': { name: '덩굴채찍', damage: 45, accuracy: 1, type: '풀', effect: null, description: '가늘고 긴 덩굴로 상대를 때려 공격한다.' },
+    '솔라빔': { name: '솔라빔', damage: 120, accuracy: 1, type: '풀', effect: null, description: '빛 에너지를 모아 강력한 광선을 발사한다.' },
+    '10만볼트': { name: '10만볼트', damage: 90, accuracy: 1, type: '전기', effect: null, description: '강력한 전격으로 상대를 공격한다.' },
+    '태권당수': { name: '태권당수', damage: 75, accuracy: 1, type: '격투', effect: null, description: '날카로운 손날로 상대를 베듯이 공격한다.' },
+    '인파이트': { name: '인파이트', damage: 120, accuracy: 1, type: '격투', effect: (attacker) => { attacker.hp -= 20; }, description: '상대에게 뛰어들어 마구잡이로 공격한다. 자신의 HP가 조금 감소한다.' },
+    '오물폭탄': { name: '오물폭탄', damage: 90, accuracy: 1, type: '독', effect: null, description: '더러운 오물 덩어리를 던져 공격한다.' },
+    '지진': { name: '지진', damage: 100, accuracy: 1, type: '땅', effect: null, description: '땅을 흔들어 주변의 모든 것을 공격한다.' },
+    '사이코키네시스': { name: '사이코키네시스', damage: 90, accuracy: 1, type: '에스퍼', effect: null, description: '강력한 염동력으로 상대를 공격한다.' },
+    '섀도볼': { name: '섀도볼', damage: 80, accuracy: 1, type: '고스트', effect: null, description: '검은 그림자 덩어리를 던져 공격한다.' },
+    '깨물어부수기': { name: '깨물어부수기', damage: 80, accuracy: 1, type: '악', effect: null, description: '날카로운 이빨로 상대를 깨물어 공격한다.' },
+    '아이언헤드': { name: '아이언헤드', damage: 80, accuracy: 1, type: '강철', effect: null, description: '강철처럼 단단한 머리로 상대를 공격한다.' }
 };
 
-const TYPE_CHART = {
-    '노말': { '바위': 0.5, '고스트': 0, '강철': 0.5 }, '불': { '불': 0.5, '물': 0.5, '풀': 2, '얼음': 2, '벌레': 2, '바위': 0.5, '드래곤': 0.5, '강철': 2 }, '물': { '불': 2, '물': 0.5, '풀': 0.5, '땅': 2, '바위': 2, '드래곤': 0.5 }, '전기': { '물': 2, '전기': 0.5, '풀': 0.5, '땅': 0, '비행': 2, '드래곤': 0.5 }, '풀': { '불': 0.5, '물': 2, '풀': 0.5, '독': 0.5, '땅': 2, '비행': 0.5, '벌레': 0.5, '바위': 2, '드래곤': 0.5, '강철': 0.5 }, '얼음': { '불': 0.5, '물': 0.5, '풀': 2, '얼음': 0.5, '땅': 2, '비행': 2, '드래곤': 2, '강철': 0.5 }, '격투': { '노말': 2, '얼음': 2, '독': 0.5, '비행': 0.5, '에스퍼': 0.5, '벌레': 0.5, '바위': 2, '고스트': 0, '강철': 2, '페어리': 0.5 }, '독': { '풀': 2, '독': 0.5, '땅': 0.5, '바위': 0.5, '고스트': 0.5, '강철': 0, '페어리': 2 }, '땅': { '불': 2, '전기': 2, '풀': 0.5, '독': 2, '비행': 0, '벌레': 0.5, '바위': 2, '강철': 2 }, '비행': { '전기': 0.5, '풀': 2, '격투': 2, '벌레': 2, '바위': 0.5, '강철': 0.5 }, '에스퍼': { '격투': 2, '독': 2, '에스퍼': 0.5, '강철': 0.5, '악': 0 }, '벌레': { '불': 0.5, '풀': 2, '격투': 0.5, '독': 0.5, '비행': 0.5, '에스퍼': 2, '고스트': 0.5, '강철': 0.5, '페어리': 0.5, '악': 2 }, '바위': { '불': 2, '얼음': 2, '격투': 0.5, '땅': 0.5, '비행': 2, '벌레': 2, '강철': 0.5 }, '고스트': { '노말': 0, '에스퍼': 2, '고스트': 2, '악': 0.5 }, '드래곤': { '드래곤': 2, '강철': 0.5, '페어리': 0 }, '강철': { '불': 0.5, '물': 0.5, '전기': 0.5, '얼음': 2, '바위': 2, '강철': 0.5, '페어리': 2 }, '페어리': { '불': 0.5, '격투': 2, '독': 0.5, '드래곤': 2, '강철': 0.5, '악': 2 }, '악': { '격투': 0.5, '에스퍼': 2, '고스트': 2, '페어리': 0.5, '악': 0.5 }
-};
-
-// OPPONENT_POOL is now generated dynamically in game.js using the PokeAPI
-
-const ALL_QUIZZES = [
-    { question: '인공지능 기술을 모든 사람이 공평하게 누려야 한다는 원칙은 무엇일까요?', options: ['공공성', '책임성', '안전성', '투명성'], answer: '공공성', explanation: "인공지능 기술의 혜택이 특정 사람이나 집단에게만 돌아가지 않고, 사회 전체의 이익을 위해 사용되어야 한다는 원칙을 '공공성'이라고 해요. 사회적 약자를 돕는 기술 등이 좋은 예시입니다." }, { question: '인공지능이 내린 판단의 이유와 과정을 사람이 이해할 수 있어야 한다는 원칙은 무엇일까요?', options: ['투명성', '인권 보장', '다양성 존중', '데이터 관리'], answer: '투명성', explanation: "인공지능이 왜 그런 결정을 내렸는지 알 수 있어야 우리는 그 결과를 신뢰하고, 문제가 생겼을 때 원인을 찾아 고칠 수 있어요. 이를 '투명성' 또는 '설명가능성'이라고 합니다." }, { question: '인공지능을 학습시킬 때, 다양한 성별, 인종, 나이의 데이터를 골고루 사용해야 하는 이유는 무엇일까요?', options: ['편향과 차별을 막기 위해', '학습 속도를 높이기 위해', '데이터 양을 늘리기 위해', '인공지능을 헷갈리게 하기 위해'], answer: '편향과 차별을 막기 위해', explanation: "인공지능은 데이터에 담긴 편견까지 학습해요. 다양한 데이터를 사용하지 않으면 특정 집단에게 불리한 결정을 내리는 차별적인 인공지능이 될 수 있기 때문에 '다양성 존중'이 중요해요." }, { question: '자율주행 자동차가 사고를 냈을 때, 그 책임은 누구에게 있을까요?', options: ['개발자, 제조사, 사용자 모두에게 책임이 있을 수 있다', '무조건 운전자에게만 책임이 있다', '무조건 자동차 제조사에게만 책임이 있다', '인공지능에게만 책임이 있다'], answer: '개발자, 제조사, 사용자 모두에게 책임이 있을 수 있다', explanation: "인공지능으로 인한 사고의 책임 소재는 매우 복잡한 문제예요. 안전한 기술을 만들 책임, 안전하게 관리할 책임, 올바르게 사용할 책임 등 여러 주체에게 책임이 있을 수 있어 사회적 합의가 필요합니다." }, { question: '친구의 허락 없이 얼굴 사진을 인공지능 앱으로 합성해서 다른 사람에게 보내는 행동은 왜 잘못되었을까요?', options: ['초상권과 프라이버시를 침해하기 때문에', '합성 앱 사용법을 몰라서', '사진이 예쁘게 나오지 않아서', '다른 친구들이 재미없어해서'], answer: '초상권과 프라이버시를 침해하기 때문에', explanation: "모든 사람은 자신의 얼굴 사진이 함부로 사용되지 않을 권리(초상권)와 사생활을 보호받을 권리(프라이버시)가 있어요. 아무리 친한 친구라도 꼭 동의를 구해야 합니다." }, { question: '인공지능 챗봇에게 나쁜 말을 계속 사용하면 어떤 문제가 생길 수 있을까요?', options: ['챗봇이 나쁜 말을 배워 다른 사람에게 사용할 수 있다', '챗봇의 수명이 짧아진다', '인터넷 속도가 느려진다', '우리 집 전기 요금이 많이 나온다'], answer: '챗봇이 나쁜 말을 배워 다른 사람에게 사용할 수 있다', explanation: "인공지능 챗봇은 사람들과의 대화를 통해 학습해요. 우리가 나쁜 말을 사용하면 챗봇도 그것을 배워 다른 사람에게 상처를 주는 말을 할 수 있어요. 인공지능에게도 존중하는 태도를 보여야 해요." }, { question: '인공지능이 만든 그림이나 음악의 주인(저작권)은 누구일까요?', options: ['아직 규칙을 정하는 중인 복잡한 문제이다', '무조건 인공지능이다', '무조건 인공지능을 사용한 사람이다', '주인이 없어 누구나 마음대로 써도 된다'], answer: '아직 규칙을 정하는 중인 복잡한 문제이다', explanation: "인공지능 창작물의 저작권을 누구에게 줄 것인지는 아직 전 세계적으로 논의 중인 어려운 문제예요. 기술을 만든 사람, 사용한 사람, 인공지능 자체 중 누구의 기여가 더 큰지 판단하기 어렵기 때문이죠." }, { question: '인공지능 기술의 발전을 위해 개인정보를 마음대로 수집해도 될까요?', options: ['안된다, 개인정보는 꼭 필요한 만큼만, 동의를 받고 수집해야 한다', '된다, 기술 발전이 더 중요하기 때문이다', '된다, 어차피 다른 사람들은 내 정보에 관심 없다', '안된다, 개인정보는 기술 발전에 도움이 안 된다'], answer: '안된다, 개인정보는 꼭 필요한 만큼만, 동의를 받고 수집해야 한다', explanation: "개인정보는 매우 소중하며, 법으로 보호받고 있어요. 인공지능을 개발할 때에도 반드시 정보 주체의 동의를 받고, 꼭 필요한 최소한의 정보만을 안전하게 수집하고 관리해야 합니다." }, { question: '인공지능이 추천해주는 영상이나 뉴스만 계속 보면 어떤 문제가 생길 수 있을까요?', options: ['생각이 한쪽으로 치우칠 수 있다', '더 똑똑해질 수 있다', '시력이 좋아진다', '새로운 친구를 사귈 수 있다'], answer: '생각이 한쪽으로 치우칠 수 있다', explanation: "인공지능은 내가 좋아할 만한 콘텐츠만 계속 보여줘요. 이런 정보만 계속 접하다 보면 다양한 생각을 접할 기회를 잃고, 마치 나만의 생각의 거품(필터 버블)에 갇히게 될 수 있어요." }, { question: '인공지능 기술을 올바르게 활용한 예시는 무엇일까요?', options: ['장애인을 위한 보조 도구를 만든다', '가짜뉴스를 만들어 퍼뜨린다', '시험 문제를 대신 풀게 한다', '다른 사람의 비밀번호를 알아낸다'], answer: '장애인을 위한 보조 도구를 만든다', explanation: "인공지능 기술은 모든 사람이 동등한 기회를 누리고, 더 나은 삶을 살 수 있도록 돕는 '공공성'을 위해 사용될 때 가장 가치가 있어요. 사회적 약자를 돕는 기술이 좋은 예입니다." },
-    { question: '딥페이크 기술을 사용하여 타인의 얼굴을 영상에 합성하는 행위의 가장 큰 윤리적 문제는 무엇일까요?', options: ['개인의 명예와 인격권을 침해할 수 있다', '영상 화질이 나빠진다', '컴퓨터 성능이 저하된다', '인터넷 속도가 느려진다'], answer: '개인의 명예와 인격권을 침해할 수 있다', explanation: '딥페이크 기술은 가짜뉴스를 만들거나 특정인의 명예를 훼손하는 등 심각한 사회적 문제를 야기할 수 있습니다. 타인의 인격권을 존중하는 것이 중요합니다.' },
+const QUIZZES = [
+    { question: 'AI가 생성한 그림의 저작권은 누구에게 있을까요?', options: ['AI 개발자', 'AI를 이용한 사람', 'AI 자체', '법적으로 불분명함'], answer: '법적으로 불분명함', explanation: 'AI 생성물의 저작권은 아직 전 세계적으로 명확한 법적 기준이 마련되지 않았습니다. 국가별로, 상황별로 해석이 달라질 수 있어 현재로서는 "법적으로 불분명하다"가 가장 정확한 답변입니다.' },
+    { question: '자율주행 자동차가 사고를 냈을 때, 가장 큰 책임은 누구에게 있을까요?', options: ['자동차 소유주', '제조사', '탑승자', '복합적 책임'], answer: '복합적 책임', explanation: '자율주행차 사고의 책임 소재는 매우 복잡한 문제입니다. 제조사의 설계 결함, 소유주의 관리 소홀, 관련 법규 등 여러 요소가 얽혀 있어 어느 한쪽의 책임으로 단정하기 어렵고, 복합적인 책임 소재를 따지는 것이 일반적입니다.' },
+    { question: '인공지능의 학습 데이터가 특정 인종이나 성별에 편향되어 있다면, 어떤 문제가 발생할 수 있을까요?', options: ['결과의 정확성 향상', '특정 집단에 대한 차별', '처리 속도 저하', '알고리즘 단순화'], answer: '특정 집단에 대한 차별', explanation: '편향된 데이터로 학습한 AI는 그 편견을 그대로 학습하여 특정 집단에게 불공정한 결과를 내놓을 수 있습니다. 이는 사회적 차별을 심화시키는 심각한 윤리적 문제입니다.' },
+    { question: 'AI 기술을 사용하여 가짜 뉴스나 허위 정보를 만드는 행위는 AI 윤리 원칙 중 무엇을 가장 크게 위배하는 것일까요?', options: ['인간 존엄성 원칙', '투명성 원칙', '사생활 보호 원칙', '기술 안정성 원칙'], answer: '인간 존엄성 원칙', explanation: '가짜 뉴스는 사회에 혼란을 주고, 개인의 명예를 훼손하며, 인간의 존엄성을 해칠 수 있습니다. AI를 악의적으로 사용하여 진실을 왜곡하는 것은 인간 중심의 기술 발전을 저해하는 행위입니다.' },
+    { question: 'AI 챗봇이 사용자의 개인정보를 수집할 때, 반드시 지켜야 할 가장 중요한 절차는 무엇일까요?', options: ['빠른 서비스 제공', '사용자에게 고지 및 동의', '데이터 암호화', '수집 정보 최소화'], answer: '사용자에게 고지 및 동의', explanation: '정보 주체의 권리를 보장하기 위해, 개인정보를 수집하고 활용하기 전에는 반드시 사용자에게 그 사실을 명확히 알리고 명시적인 동의를 받는 것이 가장 중요합니다.' },
     { question: 'AI 면접관이 특정 학교 출신 지원자에게 더 높은 점수를 주도록 프로그래밍 되었다면, 어떤 윤리 원칙에 위배될까요?', options: ['공정성', '효율성', '안전성', '혁신성'], answer: '공정성', explanation: '인공지능은 출신, 성별, 인종 등과 같은 편견 없이 모든 사람을 공정하게 대해야 합니다. 특정 집단에 유불리를 주는 것은 공정성 원칙에 어긋납니다.' },
     { question: 'AI 스피커가 사용자의 대화를 항상 녹음하고 있다면, 어떤 권리가 침해될 수 있을까요?', options: ['사생활 보호권', '재산권', '건강권', '교육권'], answer: '사생활 보호권', explanation: '개인의 대화 내용은 민감한 사생활 정보에 해당합니다. 사용자의 명시적인 동의 없이 대화를 수집하고 저장하는 것은 사생활 보호권을 심각하게 침해하는 행위입니다.' },
     { question: '인공지능 개발자가 AI의 잠재적 위험성을 충분히 검토하지 않고 출시했을 때, 어떤 원칙을 소홀히 한 것일까요?', options: ['안전성', '데이터 관리', '투명성', '공공성'], answer: '안전성', explanation: '인공지능 기술은 사람과 사회에 해를 끼치지 않도록 안전하게 설계되고 검증되어야 합니다. 잠재적인 위험을 무시하는 것은 안전성 원칙을 위반하는 것입니다.' }
 ];
-        
-const DEFAULT_SKILL = { name: '몸통박치기', power: 20, type: '노말' };
-const STRUGGLE_SKILL = { name: '발버둥치기', power: 50, type: '노말', isStruggle: true };
 
-const POKEMON_LEARNSETS = {
-    'pikachu': ['10만볼트', '번개', '전광석화', '이판사판태클'], 'bulbasaur': ['잎날가르기', '솔라빔', '오물폭탄', '몸통박치기'], 'charmander': ['화염방사', '불대문자', '드래곤크루', '깨물어부수기'], 'squirtle': ['파도타기', '하이드로펌프', '냉동빔', '깨물어부수기'], 'machamp': ['인파이트', '엄청난힘', '스톤샤워', '지진'], 'alakazam': ['사이코키네시스', '미래예지', '섀도볼', '칼춤'], 'gengar': ['섀도볼', '병상첨병', '오물폭탄', '사이코키네시스'], 'gyarados': ['파도타기', '하이드로펌프', '폭풍', '깨물어부수기'], 'snorlax': ['이판사판태클', '파괴광선', '지진', '깨물어부수기'], 'dragonite': ['드래곤크루', '용성군', '폭풍', '파괴광선'], 'metagross': ['코멧펀치', '아이언헤드', '사이코키네시스', '지진'], 'lucario': ['인파이트', '코멧펀치', '아이언헤드', '섀도볼']
-};
+const DEFAULT_SKILL = { name: '몸통박치기', damage: 40, accuracy: 1, type: '노말', effect: null, description: '단단한 몸으로 부딪혀 공격한다.' };

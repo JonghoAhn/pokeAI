@@ -1,117 +1,272 @@
-html {
-    font-size: 15px;
-}
-
-@media (min-width: 640px) {
-    html {
-        font-size: 16px;
-    }
-}
-
+/* General Body Styles */
 body {
     font-family: 'Jua', sans-serif;
-    background-color: #f0f9ff;
-    -webkit-text-size-adjust: 100%;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
+    user-select: none; /* Prevents text selection */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+ */
+    overflow: hidden; /* Prevent scrollbars on the body */
 }
 
-/* --- Responsive Container Style --- */
+/* Game Container - Aspect Ratio Box */
 #game-container {
     width: 100%;
-    height: 100%;
-    background: white;
-    display: flex;
-    flex-direction: column;
-    position: relative;
+    max-width: 500px; /* Max width of the game */
+    background-image: url('https://user-images.githubusercontent.com/15285725/112128174-89735100-8c01-11eb-9065-54e3d7d7d32c.png');
+    background-size: cover;
+    background-position: center;
+    border-radius: 1.5rem; /* More rounded corners */
+    border: 8px solid #333;
+    aspect-ratio: 9 / 16; /* Mobile phone aspect ratio */
+    overflow: hidden; /* Ensure content stays within rounded corners */
 }
 
-/* On PC, constrain the size and add shadows/borders */
-@media (min-width: 768px) {
+/* Responsive adjustments */
+@media (max-height: 800px) {
     #game-container {
-        width: 768px;
-        height: 90vh;
-        max-height: 1024px;
-        border-radius: 1rem;
-        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        height: 100vh;
+        width: auto;
+        border: none;
+        border-radius: 0;
     }
 }
 
-.screen { display: none; flex-direction: column; width: 100%; flex-grow: 1; }
-.screen.active { display: flex; }
 
-/* --- Quiz Screen Layout --- */
-#quiz-screen #answer-options {
-    grid-template-columns: 1fr; /* Mobile default: 1 column */
+/* Animations */
+@keyframes jump-in {
+    0% { transform: scale(0.5) translateY(50px); opacity: 0; }
+    80% { transform: scale(1.05) translateY(0); opacity: 1; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
 }
-/* PC: 2 columns */
-@media (min-width: 640px) {
-     #quiz-screen #answer-options {
-        grid-template-columns: 1fr 1fr;
+
+.animate-jump-in {
+    animation: jump-in 0.5s ease-out forwards;
+}
+
+/* Attack Effect Keyframes */
+/* Base properties for all effects */
+[class^="effect-"] {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+/* -- Type Specific Animations -- */
+
+/* 불꽃: 화염방사 */
+.effect-불꽃 {
+    width: 80px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(255,255,0,0.8) 0%, rgba(255,100,0,0.8) 50%, rgba(255,0,0,0) 70%);
+    left: var(--end-x);
+    top: var(--end-y);
+    transform: translate(-50%, -50%) scale(0);
+    border-radius: 50%;
+    animation: fire-blast 0.5s ease-out forwards;
+}
+@keyframes fire-blast {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+
+/* 물: 하이드로펌프 */
+.effect-물 {
+    width: 50px;
+    height: 50px;
+    background: #3498db;
+    border-radius: 50%;
+    left: var(--start-x);
+    top: var(--start-y);
+    animation: water-gun 0.4s linear forwards;
+}
+@keyframes water-gun {
+    from {
+        transform: translate(-50%, -50%) scale(1);
+        left: var(--start-x);
+        top: var(--start-y);
+        opacity: 1;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(2);
+        left: var(--end-x);
+        top: var(--end-y);
+        opacity: 0;
     }
 }
 
-.pokemon-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-.pokemon-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
-.battle-pokemon { transition: transform 0.3s ease-in-out; min-width: 4rem; min-height: 4rem; }
-.modal { display: none; flex-direction: column; }
-.modal.active { display: flex; }
-
-.lunge-animation { animation: lunge 0.5s ease-in-out; }
-.shake { animation: shake-animation 0.4s; }
-
-@keyframes lunge {
-    50% { transform: translate(10px, -10px) scale(1.1); }
-    100% { transform: translate(0, 0) scale(1); }
+/* 전기: 10만볼트 */
+.effect-전기 {
+    width: 150px;
+    height: 150px;
+    left: var(--end-x);
+    top: var(--end-y);
+    background:
+        radial-gradient(circle at 50% 50%, transparent 40%, yellow 42%, yellow 48%, transparent 50%),
+        linear-gradient(45deg, transparent 45%, yellow 46%, yellow 54%, transparent 55%),
+        linear-gradient(-45deg, transparent 45%, yellow 46%, yellow 54%, transparent 55%);
+    transform: translate(-50%, -50%) scale(0);
+    animation: thunderbolt 0.4s ease-out forwards;
+}
+@keyframes thunderbolt {
+    0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.2) rotate(180deg); }
+    100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); opacity: 0; }
 }
 
-@keyframes shake-animation {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-5px); }
-    40%, 80% { transform: translateX(5px); }
+
+/* 풀: 덩굴채찍 */
+.effect-풀 {
+    width: 10px;
+    height: 100px;
+    background: linear-gradient(to bottom, #27ae60, #2ecc71);
+    border-radius: 5px;
+    left: var(--start-x);
+    top: var(--start-y);
+    transform-origin: top center;
+    animation: vine-whip 0.5s ease-in-out forwards;
+}
+@keyframes vine-whip {
+    0% { transform: rotate(-60deg) scaleY(0); }
+    50% { transform: rotate(-60deg) scaleY(1.2); }
+    100% { transform: rotate(80deg) scaleY(1); opacity: 0; left: var(--end-x); top: var(--end-y); }
 }
 
-.type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem; }
+/* 노말: 몸통박치기 */
+.effect-노말 {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    left: var(--end-x);
+    top: var(--end-y);
+    transform: translate(-50%, -50%) scale(0);
+    animation: tackle-impact 0.3s ease-out forwards;
+}
+@keyframes tackle-impact {
+    from { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    to { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
 
-/* --- Attack Effect Styles --- */
-.effect { position: absolute; left: var(--start-x); top: var(--start-y); transform: translate(-50%, -50%); }
-.effect-노말 { width: 60px; height: 60px; border: 5px solid rgba(168, 168, 120, 0.8); border-radius: 50%; animation: move-and-fade 0.5s ease-out forwards; }
-@keyframes move-and-fade { 0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 0; } }
-.effect-불 { width: 80px; height: 80px; background: radial-gradient(circle, rgba(240, 128, 48, 1) 0%, rgba(240, 128, 48, 0) 70%); border-radius: 50%; animation: move-and-explode 0.6s ease-out forwards; }
-@keyframes move-and-explode { 0% { transform: translate(-50%, -50%) scale(0.2); } 50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(0.5); } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(2); opacity: 0; } }
-.effect-물::before { content: ''; position: absolute; width: 50px; height: 50px; border: 5px solid #6890f0; border-radius: 50%; animation: move-and-splash 0.6s ease-out forwards; }
-@keyframes move-and-splash { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 1; } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1.2); opacity: 0; border-width: 0px; } }
-.effect-전기 { width: 100px; height: 100px; background: radial-gradient(circle, rgba(255, 255, 0, 0.8), transparent 60%); border-radius: 50%; left: var(--end-x); top: var(--end-y); animation: electric-shock 0.4s forwards; }
-@keyframes electric-shock { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
-.effect-풀 { width: 20px; height: 30px; background-color: #78c850; border-radius: 50% 0; animation: move-and-spin 0.7s ease-out forwards; }
-@keyframes move-and-spin { from { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; } to { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) rotate(720deg); opacity: 0; } }
-.effect-격투 { width: 50px; height: 50px; background-color: rgba(194, 46, 40, 0.7); border-radius: 10px; animation: punch-effect 0.4s ease-in forwards; }
-@keyframes punch-effect { 0% { transform: translate(-50%, -50%) scale(0.5); } 50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1.2); } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 0; } }
-.effect-에스퍼 { width: 70px; height: 70px; border: 4px solid #f85888; border-radius: 50%; box-shadow: 0 0 15px #f85888; left: var(--end-x); top: var(--end-y); animation: psychic-wave 0.7s ease-out forwards; }
-@keyframes psychic-wave { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
-.effect-독 { width: 60px; height: 60px; background: radial-gradient(circle, rgba(160, 64, 160, 0.8) 0%, rgba(160, 64, 160, 0) 70%); border-radius: 50%; animation: bubble-rise 0.8s ease-in-out forwards; }
-@keyframes bubble-rise { 0% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(0.2); opacity: 1; } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 100px - 50%)) scale(1); opacity: 0; } }
-.effect-땅 { width: 100px; height: 20px; background-color: #E0C068; border-radius: 50%; left: var(--end-x); top: calc(var(--end-y) + 30px); animation: ground-shock 0.5s forwards; }
-@keyframes ground-shock { 0% { transform: translate(-50%, -50%) scale(0, 1); } 50% { transform: translate(-50%, -50%) scale(1, 1); } 100% { transform: translate(-50%, -50%) scale(0, 1); opacity: 0; } }
-.effect-비행 { width: 80px; height: 2px; background: white; box-shadow: 0 0 10px white; animation: wind-slash 0.4s ease-out forwards; }
-@keyframes wind-slash { 0% { transform: translate(-50%, -50%) scaleX(0); opacity: 1; } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scaleX(1); opacity: 0; } }
-.effect-벌레 { width: 10px; height: 10px; background-color: #A8B820; border-radius: 50%; box-shadow: 0 0 5px #A8B820; animation: bug-swarm 0.6s forwards; }
-@keyframes bug-swarm { 0% { transform: translate(-50%, -50%); opacity: 1; } 100% { transform: translate(calc(var(--end-translate-x) - 50% + 20px), calc(var(--end-translate-y) - 50% - 20px)); opacity: 0; } }
-.effect-바위 { width: 40px; height: 40px; background-color: #B8A038; border-radius: 10px; animation: rock-throw 0.5s ease-in forwards; }
-@keyframes rock-throw { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) rotate(360deg); opacity: 0; } }
-.effect-고스트 { width: 60px; height: 60px; background: radial-gradient(circle, rgba(112, 88, 152, 0.7) 0%, transparent 70%); border-radius: 50%; left: var(--end-x); top: var(--end-y); animation: fade-ghostly 0.8s forwards; }
-@keyframes fade-ghostly { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); } }
-.effect-드래곤 { width: 80px; height: 80px; border: 3px solid #7038F8; border-radius: 50%; animation: dragon-breath 0.6s forwards; }
-@keyframes dragon-breath { 0% { transform: translate(-50%, -50%) scale(0); } 50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1.2); opacity: 0; } }
-.effect-강철 { width: 50px; height: 50px; background: linear-gradient(45deg, #B8B8D0, #8888A0); border: 2px solid white; animation: steel-impact 0.3s ease-in-out forwards; }
-@keyframes steel-impact { 0% { transform: translate(-50%, -50%) scale(0); } 70% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1.2); } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 0; } }
-.effect-악 { width: 70px; height: 70px; background: black; border-radius: 50%; box-shadow: 0 0 20px black; left: var(--end-x); top: var(--end-y); animation: dark-pulse 0.7s forwards; }
-@keyframes dark-pulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(0.5); } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
-.effect-페어리 { width: 10px; height: 10px; background-color: #EE99AC; border-radius: 50%; box-shadow: 0 0 10px #FFC0CB; animation: fairy-dust 1s forwards; }
-@keyframes fairy-dust { 0% { transform: translate(-50%, -50%); opacity: 1; } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50% - 30px)); opacity: 0; } }
+/* 격투: 태권당수 */
+.effect-격투 {
+    width: 80px;
+    height: 10px;
+    background: white;
+    box-shadow: 0 0 15px white;
+    left: var(--end-x);
+    top: var(--end-y);
+    animation: karate-chop 0.3s ease-out forwards;
+}
+@keyframes karate-chop {
+    0% { transform: translate(-50%, -50%) translateX(-100px) skewX(30deg); opacity: 0; }
+    50% { transform: translate(-50%, -50%) translateX(0) skewX(30deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) translateX(100px) skewX(30deg); opacity: 0; }
+}
+
+/* 독: 오물폭탄 */
+.effect-독 {
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, #8e44ad, #4a148c);
+    border-radius: 50%;
+    left: var(--start-x);
+    top: var(--start-y);
+    animation: sludge-bomb 0.6s cubic-bezier(0.5, -0.5, 0.5, 1.5) forwards;
+}
+@keyframes sludge-bomb {
+    0% { left: var(--start-x); top: var(--start-y); transform: scale(0.5); }
+    100% { left: var(--end-x); top: var(--end-y); transform: scale(1); opacity: 0; }
+}
+
+/* 땅: 지진 */
+.effect-땅 {
+    width: 200px;
+    height: 30px;
+    background: linear-gradient(to top, #a16f4a, transparent);
+    border-radius: 50% 50% 0 0;
+    left: var(--end-x);
+    bottom: 0; /* Position at the bottom of the target area */
+    transform: translateX(-50%) scaleY(0);
+    animation: earthquake-shock 0.5s ease-out forwards;
+}
+@keyframes earthquake-shock {
+    0% { transform: translateX(-50%) scaleY(0); }
+    30% { transform: translateX(-50%) scaleY(1); }
+    100% { transform: translateX(-50%) scaleY(1); opacity: 0; }
+}
+
+/* 에스퍼: 사이코키네시스 */
+.effect-에스퍼 {
+    width: 100px;
+    height: 100px;
+    border: 5px solid #ff00ff;
+    border-radius: 50%;
+    left: var(--end-x);
+    top: var(--end-y);
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+    animation: psychic-wave 0.6s ease-in-out forwards;
+}
+@keyframes psychic-wave {
+    0% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+    50% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+
+/* 고스트: 섀도볼 */
+.effect-고스트 {
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, #4b0082, black);
+    border-radius: 50%;
+    left: var(--start-x);
+    top: var(--start-y);
+    animation: shadow-ball-move 0.7s ease-in forwards;
+}
+@keyframes shadow-ball-move {
+    from { transform: translate(-50%, -50%); left: var(--start-x); top: var(--start-y); }
+    to { transform: translate(-50%, -50%); left: var(--end-x); top: var(--end-y); opacity: 0; }
+}
+
+/* 악: 깨물어부수기 */
+.effect-악 { 
+    width: 70px; 
+    height: 70px; 
+    background: black; 
+    border-radius: 50%; 
+    box-shadow: 0 0 20px black; 
+    left: var(--start-x); 
+    top: var(--start-y); 
+    animation: dark-pulse 0.5s ease-in-out forwards; 
+    opacity: 0.8;
+}
+
+@keyframes dark-pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1);
+        opacity: 0;
+    }
+}
+
+/* 강철: 아이언헤드 */
+.effect-강철 {
+    width: 50px;
+    height: 50px;
+    background: #bdc3c7;
+    left: var(--start-x);
+    top: var(--start-y);
+    animation: iron-head-ram 0.4s ease-out forwards;
+}
+@keyframes iron-head-ram {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    40% { transform: translate(-50%, -50%) scale(1); left: var(--start-x); top: var(--start-y); }
+    100% { transform: translate(-50%, -50%) scale(1.5); left: var(--end-x); top: var(--end-y); opacity: 0; }
+}
