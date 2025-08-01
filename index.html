@@ -2,20 +2,21 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0", maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI 윤리 포켓몬 게임</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-blue-50 flex items-center justify-center min-h-screen p-2 sm:p-4">
+<body class="bg-blue-50 flex items-center justify-center min-h-screen overflow-hidden">
 
-    <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-4 sm:p-6 relative overflow-hidden">
+    <!-- Main Game Container for Scaling -->
+    <div id="game-container" class="relative bg-white shadow-xl flex flex-col">
         
         <!-- Attack Animation Overlay -->
         <div id="attack-animation-overlay" class="absolute inset-0 pointer-events-none z-10"></div>
 
-        <!-- Top Right Icons: Hall of Fame & Type Chart -->
+        <!-- Top Right Icons -->
         <div class="absolute top-4 right-4 z-20 flex items-center space-x-2">
              <div id="hall-of-fame-button" class="cursor-pointer bg-white rounded-full p-2 shadow-md hover:bg-gray-100" title="명예의 전당">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="currentColor" viewBox="0 0 16 16">
@@ -29,7 +30,7 @@
             </div>
         </div>
 
-        <!-- Bottom Left: Volume Control -->
+        <!-- Volume Control -->
         <div class="absolute bottom-4 left-4 z-20 flex items-center space-x-2">
             <div id="volume-control" class="cursor-pointer bg-white rounded-full p-2 shadow-md hover:bg-gray-100">
                 <svg id="sound-on-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -43,82 +44,89 @@
             <input id="volume-slider" type="range" min="0" max="1" step="0.1" value="0.5" class="w-24">
         </div>
 
-        <!-- Screen 0: Start Screen -->
-        <div id="start-screen" class="screen active flex-col items-center justify-center text-center p-4">
-            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4">AI윤리 포켓몬 게임</h1>
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" alt="Pikachu" class="w-40 h-40 mx-auto my-4">
-            <p class="text-gray-600 mb-8 w-full max-w-md">
-                인공지능 윤리 퀴즈를 풀고 기술을 배워 포켓몬 배틀에서 승리하세요!
-                퀴즈를 맞히면 새로운 기술을 배울 수 있습니다. 배운 기술을 활용하여 7개의 스테이지를 모두 클리어하고 AI 윤리 마스터가 되어보세요!
-            </p>
-            <button id="start-game-button" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition transform hover:scale-105">게임 시작</button>
-        </div>
-
-        <!-- Screen 1: Pokemon Selection Screen -->
-        <div id="selection-screen" class="screen flex-col items-center">
-            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-2">파트너 포켓몬을 선택하세요!</h1>
-            <p class="text-gray-500 mb-4 sm:mb-8">선택한 포켓몬에 따라 상대가 달라집니다.</p>
-            <div id="pokemon-options" class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4"></div>
-        </div>
-
-        <!-- Screen 2: Quiz Screen -->
-        <div id="quiz-screen" class="screen flex-col items-center">
-            <h1 id="stage-title-quiz" class="text-2xl font-bold text-center text-indigo-600 mb-4"></h1>
-            <div class="w-full flex justify-between items-center mb-4">
-                <div class="flex items-center">
-                    <img id="quiz-pokemon-img" class="w-16 h-16 mr-4" src="" alt="Player Pokemon">
-                    <div>
-                        <h2 id="quiz-pokemon-name" class="text-2xl font-bold"></h2>
-                        <p class="text-gray-500">인공지능 윤리 퀴즈를 풀어보자!</p>
-                    </div>
-                </div>
-                <div id="skill-progress" class="flex space-x-2"></div>
+        <!-- Inner Content -->
+        <div class="p-4 sm:p-6 flex-grow flex flex-col">
+            <!-- Screen 0: Start Screen -->
+            <div id="start-screen" class="screen active flex-col items-center justify-around text-center flex-grow">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4">AI윤리 포켓몬 게임</h1>
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" alt="Pikachu" class="w-48 h-48 mx-auto my-4">
+                <p class="text-gray-600 mb-8 w-full max-w-md">
+                    인공지능 윤리 퀴즈를 풀고 기술을 배워 포켓몬 배틀에서 승리하세요!
+                    퀴즈를 맞히면 새로운 기술을 배울 수 있습니다. 배운 기술을 활용하여 7개의 스테이지를 모두 클리어하고 AI 윤리 마스터가 되어보세요!
+                </p>
+                <button id="start-game-button" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition transform hover:scale-105">게임 시작</button>
             </div>
-            <div class="w-full bg-gray-100 rounded-lg p-4 sm:p-6 text-center shadow-inner">
-                <p id="question-number" class="text-sm text-indigo-500 font-bold mb-2"></p>
-                <p id="question-text" class="text-base sm:text-lg font-bold text-gray-800 mb-6 min-h-[6rem] flex items-center justify-center"></p>
-                <div id="answer-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"></div>
+
+            <!-- Screen 1: Pokemon Selection Screen -->
+            <div id="selection-screen" class="screen flex-col items-center flex-grow">
+                <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 my-4">파트너 포켓몬을 선택하세요!</h1>
+                <p class="text-gray-500 mb-4 sm:mb-8">선택한 포켓몬에 따라 상대가 달라집니다.</p>
+                <div id="pokemon-options" class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4"></div>
             </div>
-            <div id="feedback-message" class="mt-4 text-lg font-bold h-6"></div>
-        </div>
-        
-        <!-- Screen 3: Battle Screen -->
-        <div id="battle-screen" class="screen flex-col">
-            <h1 id="stage-title-battle" class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-4"></h1>
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex-1"></div>
-                <div class="flex items-center space-x-2 sm:space-x-4">
-                    <div class="text-right">
-                        <h2 id="opponent-name" class="text-base sm:text-lg md:text-xl font-bold truncate"></h2>
-                        <div class="w-28 sm:w-40 md:w-48 bg-gray-300 rounded-full h-5 border-2 border-gray-400">
-                            <div id="opponent-hp" class="h-full rounded-full text-xs text-white text-center font-bold" style="width: 100%;">HP</div>
+
+            <!-- Screen 2: Quiz Screen -->
+            <div id="quiz-screen" class="screen flex-col items-center flex-grow">
+                <h1 id="stage-title-quiz" class="text-2xl font-bold text-center text-indigo-600 my-4"></h1>
+                <div class="w-full flex justify-between items-center mb-4">
+                    <div class="flex items-center">
+                        <img id="quiz-pokemon-img" class="w-16 h-16 mr-4" src="" alt="Player Pokemon">
+                        <div>
+                            <h2 id="quiz-pokemon-name" class="text-2xl font-bold"></h2>
+                            <p class="text-gray-500">인공지능 윤리 퀴즈를 풀어보자!</p>
                         </div>
                     </div>
-                    <img id="opponent-img" class="w-16 h-16 sm:w-24 md:w-32 battle-pokemon" src="" alt="Opponent Pokemon">
+                    <div id="skill-progress" class="flex space-x-2"></div>
                 </div>
+                <div class="w-full bg-gray-100 rounded-lg p-4 sm:p-6 text-center shadow-inner flex-grow flex flex-col justify-center">
+                    <p id="question-number" class="text-sm text-indigo-500 font-bold mb-2"></p>
+                    <p id="question-text" class="text-base sm:text-lg font-bold text-gray-800 mb-6 flex items-center justify-center flex-grow"></p>
+                    <div id="answer-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"></div>
+                </div>
+                <div id="feedback-message" class="mt-4 text-lg font-bold h-6"></div>
             </div>
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center space-x-2 sm:space-x-4">
-                    <img id="player-img" class="w-16 h-16 sm:w-24 md:w-32 battle-pokemon" src="" alt="Player Pokemon">
-                    <div>
-                        <h2 id="player-name" class="text-base sm:text-lg md:text-xl font-bold truncate"></h2>
-                        <div class="w-28 sm:w-40 md:w-48 bg-gray-300 rounded-full h-5 border-2 border-gray-400">
-                            <div id="player-hp" class="h-full rounded-full text-xs text-white text-center font-bold" style="width: 100%;">HP</div>
+            
+            <!-- Screen 3: Battle Screen -->
+            <div id="battle-screen" class="screen flex-col flex-grow justify-center">
+                <h1 id="stage-title-battle" class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-4"></h1>
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex-1"></div>
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <div class="text-right">
+                            <h2 id="opponent-name" class="text-base sm:text-lg md:text-xl font-bold truncate"></h2>
+                            <div class="w-32 sm:w-40 md:w-48 bg-gray-300 rounded-full h-5 border-2 border-gray-400">
+                                <div id="opponent-hp" class="h-full rounded-full text-xs text-white text-center font-bold" style="width: 100%;">HP</div>
+                            </div>
                         </div>
+                        <img id="opponent-img" class="w-20 h-20 sm:w-24 md:w-32 battle-pokemon" src="" alt="Opponent Pokemon">
                     </div>
                 </div>
-                <div class="flex-1"></div>
-            </div>
-            <div class="bg-gray-100 rounded-lg p-2 sm:p-4">
-                <div id="battle-log" class="mb-2 h-6 text-center font-bold text-gray-700"></div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div id="skill-buttons" class="grid grid-cols-2 gap-2 col-span-2 sm:col-span-1"></div>
-                    <div id="item-buttons" class="grid grid-cols-2 gap-2 col-span-2 sm:col-span-1 border-t-2 sm:border-t-0 sm:border-l-2 border-gray-300 pt-2 sm:pt-0 sm:pl-3 mt-2 sm:mt-0"></div>
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <img id="player-img" class="w-20 h-20 sm:w-24 md:w-32 battle-pokemon" src="" alt="Player Pokemon">
+                        <div>
+                            <h2 id="player-name" class="text-base sm:text-lg md:text-xl font-bold truncate"></h2>
+                            <div class="w-32 sm:w-40 md:w-48 bg-gray-300 rounded-full h-5 border-2 border-gray-400">
+                                <div id="player-hp" class="h-full rounded-full text-xs text-white text-center font-bold" style="width: 100%;">HP</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-1"></div>
                 </div>
+                <div class="bg-gray-100 rounded-lg p-2 sm:p-4 mt-4">
+                    <div id="battle-log" class="mb-2 h-6 text-center font-bold text-gray-700"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div id="skill-buttons" class="grid grid-cols-2 gap-2 col-span-2 sm:col-span-1"></div>
+                        <div id="item-buttons" class="grid grid-cols-2 gap-2 col-span-2 sm:col-span-1 border-t-2 sm:border-t-0 sm:border-l-2 border-gray-300 pt-2 sm:pt-0 sm:pl-3 mt-2 sm:mt-0"></div>
+                    </div>
+                </div>
+            </div>
+             <!-- Logo Image -->
+            <div class="mt-auto pt-4 text-center">
+                <img src="logo.jpg" alt="Logo" class="h-10 mx-auto" onerror="this.style.display='none'">
             </div>
         </div>
 
-        <!-- Modal Group -->
+        <!-- Modals (remain outside the content area for proper layering) -->
         <div id="stage-clear-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30 p-4">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-sm">
                 <h2 class="text-3xl font-bold mb-4 text-blue-500">🎉 스테이지 클리어! 🎉</h2>
@@ -126,7 +134,6 @@
                 <button id="next-stage-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-lg">다음 스테이지로</button>
             </div>
         </div>
-
         <div id="result-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30 p-4">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-sm">
                 <h2 id="result-title" class="text-4xl font-bold mb-4"></h2>
@@ -134,7 +141,6 @@
                 <button id="play-again-button" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-lg text-lg">다시하기</button>
             </div>
         </div>
-
         <div id="record-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30 p-4">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-sm">
                 <h2 class="text-3xl font-bold mb-4 text-yellow-500">🏆 최종 승리! 🏆</h2>
@@ -143,7 +149,6 @@
                 <button id="submit-record-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg text-lg">등록하기</button>
             </div>
         </div>
-
         <div id="hall-of-fame-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center p-4 z-40">
             <div class="bg-white rounded-2xl p-6 shadow-xl w-full max-w-lg relative">
                 <button id="close-hof-button" class="absolute top-2 right-2 bg-red-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-lg">&times;</button>
@@ -163,7 +168,6 @@
                 </div>
             </div>
         </div>
-        
         <div id="skill-selection-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30 p-4">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-md">
                 <h2 class="text-3xl font-bold mb-4 text-indigo-600">기술 배우기!</h2>
@@ -171,7 +175,6 @@
                 <div id="skill-choices" class="grid grid-cols-1 gap-3"></div>
             </div>
         </div>
-
         <div id="forget-skill-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30 p-4">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-md">
                 <h2 class="text-3xl font-bold mb-4 text-red-600">기술이 가득 찼습니다!</h2>
@@ -181,7 +184,6 @@
                 <button id="cancel-forget-button" class="mt-6 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">그만두기</button>
             </div>
         </div>
-
         <div id="explanation-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center p-4 z-30">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-md">
                 <h2 id="explanation-title" class="text-3xl font-bold mb-4"></h2>
@@ -189,7 +191,6 @@
                 <button id="next-question-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg">계속하기</button>
             </div>
         </div>
-        
         <div id="type-chart-modal" class="modal fixed inset-0 bg-black bg-opacity-80 items-center justify-center p-4 z-40">
             <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-xl w-full max-w-3xl relative overflow-y-auto max-h-full">
                 <button id="close-type-chart-button" class="sticky top-0 left-full bg-red-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold text-lg z-30">&times;</button>
@@ -209,11 +210,6 @@
                     <div><strong class="text-gray-400">강철</strong>은 <span class="font-bold">얼음, 바위, 페어리</span>에 강해요.</div>
                 </div>
             </div>
-        </div>
-
-        <!-- Logo Image -->
-        <div class="mt-6 text-center">
-            <img src="logo.jpg" alt="Logo" class="h-10 mx-auto" onerror="this.style.display='none'">
         </div>
     </div>
 

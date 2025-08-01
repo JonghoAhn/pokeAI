@@ -6,10 +6,29 @@ const QUESTIONS_PER_STAGE = 2;
 let correctAnswersThisStage = 0;
 let battleLogTimeout;
 
+// --- Design Constants for Scaling ---
+const DESIGN_WIDTH = 768;
+const DESIGN_HEIGHT = 1024;
+
 // --- DOM Elements ---
 const screens = { start: document.getElementById('start-screen'), selection: document.getElementById('selection-screen'), quiz: document.getElementById('quiz-screen'), battle: document.getElementById('battle-screen') };
 const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal'), record: document.getElementById('record-modal'), hallOfFame: document.getElementById('hall-of-fame-modal') };
 const bgm = { battle: document.getElementById('bgm-battle'), quiz: document.getElementById('bgm-quiz') };
+
+// --- Scaling and Resize Logic ---
+function resizeGame() {
+    const gameContainer = document.getElementById('game-container');
+    if (!gameContainer) return;
+
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    // Calculate scale factor, ensuring the entire game fits on screen
+    const scale = Math.min(screenWidth / DESIGN_WIDTH, screenHeight / DESIGN_HEIGHT);
+
+    gameContainer.style.transform = `scale(${scale})`;
+}
+
 
 // --- Screen & Modal Management ---
 function showScreen(screenName) {
@@ -273,14 +292,12 @@ function toggleBattleButtons(disabled) {
         if (disabled) {
             button.classList.add('opacity-50', 'cursor-not-allowed');
         } else {
-            // Re-enable only if logically possible (e.g., potion available or skill has PP)
             const isPotionButton = button.id === 'potion-button';
             const isStruggle = button.textContent.includes(STRUGGLE_SKILL.name);
             
             if (isPotionButton && (playerInventory.potion <= 0 || playerPokemon.hp === playerPokemon.maxHp)) {
-                // Keep potion button disabled if unusable
+                // Keep potion button disabled
             } else if (!isPotionButton && !isStruggle) {
-                // For regular skills, check PP
                 const skillName = button.innerHTML.split('<br>')[0];
                 const skill = battleSkills.find(s => s.name === skillName);
                 if (skill && skill.pp > 0) {
@@ -306,7 +323,7 @@ function updateBattleUI() {
     const opponentHpBar = document.getElementById('opponent-hp');
     const opponentHpPercent = (opponentPokemon.hp / opponentPokemon.maxHp) * 100;
     opponentHpBar.style.width = `${opponentHpPercent}%`;
-    opponentHpBar.textContent = `HP`;
+    opponentHpBar.textContent = `${Math.ceil(opponentPokemon.hp)} / ${opponentPokemon.maxHp}`;
     opponentHpBar.className = `h-full rounded-full text-xs text-white text-center font-bold transition-all duration-500 ${opponentHpPercent > 50 ? 'bg-green-500' : opponentHpPercent > 20 ? 'bg-yellow-500' : 'bg-red-500'}`;
     document.getElementById('opponent-name').textContent = opponentPokemon.name;
     document.getElementById('opponent-img').src = opponentPokemon.img;
@@ -499,10 +516,12 @@ function applyEffect(effect, attacker, defender) {
 function winBattle() {
     isBattling = false;
     currentStage++;
+    playerInventory.potion++;
     saveRecord(false);
-    if (currentStage >= gameStages.length) winGame();
-    else {
-        document.getElementById('stage-clear-message').textContent = `다음 상대는 ${gameStages[currentStage].name} 입니다.`;
+    if (currentStage >= gameStages.length) {
+        winGame();
+    } else {
+        document.getElementById('stage-clear-message').innerHTML = `다음 상대는 ${gameStages[currentStage].name} 입니다.<br><span class="text-green-500 font-bold mt-2 block">상처약 1개를 획득했다!</span>`;
         showModal('stageClear');
     }
 }
@@ -552,6 +571,12 @@ function showHallOfFame() {
 
 // --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Initial setup
+    resizeGame();
+    showScreen('start');
+
+    // Event listeners
+    window.addEventListener('resize', resizeGame);
     document.getElementById('start-game-button').addEventListener('click', () => { initSelectionScreen(); showScreen('selection'); });
     document.getElementById('next-question-button').addEventListener('click', proceedAfterExplanation);
     document.getElementById('next-stage-button').addEventListener('click', startStage);
@@ -563,6 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('type-chart-icon').addEventListener('click', () => showModal('typeChart'));
     document.getElementById('close-type-chart-button').addEventListener('click', hideModals);
 
+    // Volume controls
     const volumeSlider = document.getElementById('volume-slider');
     const soundOnIcon = document.getElementById('sound-on-icon');
     const soundOffIcon = document.getElementById('sound-off-icon');
@@ -579,5 +605,4 @@ document.addEventListener('DOMContentLoaded', () => {
         setVolume(newVolume);
     });
     setVolume(volumeSlider.value);
-    showScreen('start');
 });
