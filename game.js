@@ -9,6 +9,7 @@ let battleLogTimeout;
 // --- Design Constants for Scaling ---
 const DESIGN_WIDTH = 768;
 const DESIGN_HEIGHT = 1024;
+const PC_BREAKPOINT = 768; // Width to switch between PC and mobile scaling
 
 // --- DOM Elements ---
 const screens = { start: document.getElementById('start-screen'), selection: document.getElementById('selection-screen'), quiz: document.getElementById('quiz-screen'), battle: document.getElementById('battle-screen') };
@@ -21,12 +22,18 @@ function resizeGame() {
     if (!gameContainer) return;
 
     const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-
-    // Calculate scale factor, ensuring the entire game fits on screen
-    const scale = Math.min(screenWidth / DESIGN_WIDTH, screenHeight / DESIGN_HEIGHT);
-
-    gameContainer.style.transform = `scale(${scale})`;
+    
+    // Only apply scaling on screens smaller than the PC breakpoint
+    if (screenWidth < PC_BREAKPOINT) {
+        // --- Mobile Logic ---
+        const screenHeight = window.innerHeight;
+        const scale = Math.min(screenWidth / DESIGN_WIDTH, screenHeight / DESIGN_HEIGHT);
+        gameContainer.style.transform = `scale(${scale})`;
+    } else {
+        // --- PC Logic ---
+        // On larger screens, remove scaling to show the game at its original size
+        gameContainer.style.transform = 'none';
+    }
 }
 
 
