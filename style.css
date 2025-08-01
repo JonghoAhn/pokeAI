@@ -12,54 +12,51 @@ body {
     font-family: 'Jua', sans-serif;
     background-color: #f0f9ff;
     -webkit-text-size-adjust: 100%;
-}
-
-/* --- Scaling Styles --- */
-#game-container {
-    /* Base styles for PC */
-    width: 768px; 
-    max-width: 100%;
-    margin: 1rem auto;
-    border-radius: 1rem;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
-    transition: transform 0.1s ease-out;
-    transform-origin: center;
 }
 
-/* Apply scaling only when the screen is smaller than the PC breakpoint */
-@media (max-width: 767px) {
-    body {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0;
-    }
+/* --- Responsive Container Style --- */
+#game-container {
+    width: 100%;
+    height: 100%;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* On PC, constrain the size and add shadows/borders */
+@media (min-width: 768px) {
     #game-container {
-        width: 768px; /* Fixed design width for scaling calculation */
-        height: 1024px; /* Fixed design height */
-        margin: 0; /* Remove margin for scaling */
-    }
-    
-    /* --- Mobile-only Quiz Screen Readability Improvements --- */
-    #quiz-screen #question-text {
-        font-size: 1.75rem !important;
-        line-height: 2.25rem !important;
-    }
-
-    #quiz-screen #answer-options {
-        grid-template-columns: 1fr !important;
-        gap: 1rem !important;
-    }
-
-    #quiz-screen #answer-options button {
-        padding: 1rem !important;
-        font-size: 1.25rem !important;
+        width: 768px;
+        height: 90vh;
+        max-height: 1024px;
+        border-radius: 1rem;
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     }
 }
 
-
-.screen { display: none; flex-direction: column; width: 100%; height: 100%; }
+.screen { display: none; flex-direction: column; width: 100%; flex-grow: 1; }
 .screen.active { display: flex; }
+
+/* --- Quiz Screen Layout --- */
+#quiz-screen #answer-options {
+    grid-template-columns: 1fr; /* Mobile default: 1 column */
+}
+/* PC: 2 columns */
+@media (min-width: 640px) {
+     #quiz-screen #answer-options {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 .pokemon-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
 .pokemon-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }
 .battle-pokemon { transition: transform 0.3s ease-in-out; min-width: 4rem; min-height: 4rem; }
@@ -90,104 +87,18 @@ body {
     transform: translate(-50%, -50%);
 }
 
-/* 노말 타입 이펙트 (Moving) */
-.effect-노말 {
-    width: 60px;
-    height: 60px;
-    border: 5px solid rgba(168, 168, 120, 0.8);
-    border-radius: 50%;
-    animation: move-and-fade 0.5s ease-out forwards;
-}
-@keyframes move-and-fade {
-    0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
-    100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 0; }
-}
-
-/* 불 타입 이펙트 (Moving) */
-.effect-불 {
-    width: 80px;
-    height: 80px;
-    background: radial-gradient(circle, rgba(240, 128, 48, 1) 0%, rgba(240, 128, 48, 0) 70%);
-    border-radius: 50%;
-    animation: move-and-explode 0.6s ease-out forwards;
-}
-@keyframes move-and-explode {
-    0% { transform: translate(-50%, -50%) scale(0.2); }
-    50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(0.5); }
-    100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(2); opacity: 0; }
-}
-
-/* 물 타입 이펙트 (Moving) */
-.effect-물::before {
-    content: '';
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    border: 5px solid #6890f0;
-    border-radius: 50%;
-    animation: move-and-splash 0.6s ease-out forwards;
-}
-@keyframes move-and-splash {
-    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
-    50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 1; }
-    100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1.2); opacity: 0; border-width: 0px; }
-}
-
-/* 전기 타입 이펙트 (Stationary) */
-.effect-전기 {
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle, rgba(255, 255, 0, 0.8), transparent 60%);
-    border-radius: 50%;
-    left: var(--end-x);
-    top: var(--end-y);
-    animation: electric-shock 0.4s forwards;
-}
-@keyframes electric-shock {
-    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-    50% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
-}
-
-/* 풀 타입 이펙트 (Moving) */
-.effect-풀 {
-    width: 20px;
-    height: 30px;
-    background-color: #78c850;
-    border-radius: 50% 0;
-    animation: move-and-spin 0.7s ease-out forwards;
-}
-@keyframes move-and-spin {
-    from { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; }
-    to { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) rotate(720deg); opacity: 0; }
-}
-
-/* 격투 타입 이펙트 (Moving) */
-.effect-격투 {
-    width: 50px;
-    height: 50px;
-    background-color: rgba(194, 46, 40, 0.7);
-    border-radius: 10px;
-    animation: punch-effect 0.4s ease-in forwards;
-}
-@keyframes punch-effect {
-    0% { transform: translate(-50%, -50%) scale(0.5); }
-    50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1.2); }
-    100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 0; }
-}
-
-/* 에스퍼 타입 이펙트 (Stationary) */
-.effect-에스퍼 {
-    width: 70px;
-    height: 70px;
-    border: 4px solid #f85888;
-    border-radius: 50%;
-    box-shadow: 0 0 15px #f85888;
-    left: var(--end-x);
-    top: var(--end-y);
-    animation: psychic-wave 0.7s ease-out forwards;
-}
-@keyframes psychic-wave {
-    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-}
+/* ... (The rest of the effect styles remain the same) ... */
+.effect-노말 { width: 60px; height: 60px; border: 5px solid rgba(168, 168, 120, 0.8); border-radius: 50%; animation: move-and-fade 0.5s ease-out forwards; }
+@keyframes move-and-fade { 0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 0; } }
+.effect-불 { width: 80px; height: 80px; background: radial-gradient(circle, rgba(240, 128, 48, 1) 0%, rgba(240, 128, 48, 0) 70%); border-radius: 50%; animation: move-and-explode 0.6s ease-out forwards; }
+@keyframes move-and-explode { 0% { transform: translate(-50%, -50%) scale(0.2); } 50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(0.5); } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(2); opacity: 0; } }
+.effect-물::before { content: ''; position: absolute; width: 50px; height: 50px; border: 5px solid #6890f0; border-radius: 50%; animation: move-and-splash 0.6s ease-out forwards; }
+@keyframes move-and-splash { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 1; } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1.2); opacity: 0; border-width: 0px; } }
+.effect-전기 { width: 100px; height: 100px; background: radial-gradient(circle, rgba(255, 255, 0, 0.8), transparent 60%); border-radius: 50%; left: var(--end-x); top: var(--end-y); animation: electric-shock 0.4s forwards; }
+@keyframes electric-shock { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
+.effect-풀 { width: 20px; height: 30px; background-color: #78c850; border-radius: 50% 0; animation: move-and-spin 0.7s ease-out forwards; }
+@keyframes move-and-spin { from { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; } to { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) rotate(720deg); opacity: 0; } }
+.effect-격투 { width: 50px; height: 50px; background-color: rgba(194, 46, 40, 0.7); border-radius: 10px; animation: punch-effect 0.4s ease-in forwards; }
+@keyframes punch-effect { 0% { transform: translate(-50%, -50%) scale(0.5); } 50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1.2); } 100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 0; } }
+.effect-에스퍼 { width: 70px; height: 70px; border: 4px solid #f85888; border-radius: 50%; box-shadow: 0 0 15px #f85888; left: var(--end-x); top: var(--end-y); animation: psychic-wave 0.7s ease-out forwards; }
+@keyframes psychic-wave { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }

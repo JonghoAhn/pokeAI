@@ -10,7 +10,7 @@
 </head>
 <body class="bg-blue-50 flex items-center justify-center min-h-screen overflow-hidden">
 
-    <!-- Main Game Container for Scaling -->
+    <!-- Main Game Container -->
     <div id="game-container" class="relative bg-white shadow-xl flex flex-col">
         
         <!-- Attack Animation Overlay -->
@@ -44,13 +44,13 @@
             <input id="volume-slider" type="range" min="0" max="1" step="0.1" value="0.5" class="w-24">
         </div>
 
-        <!-- Inner Content -->
-        <div class="p-4 sm:p-6 flex-grow flex flex-col">
+        <!-- Inner Content Area -->
+        <div class="p-6 flex-grow flex flex-col overflow-hidden">
             <!-- Screen 0: Start Screen -->
             <div id="start-screen" class="screen active flex-col items-center justify-around text-center flex-grow">
-                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4">AI윤리 포켓몬 게임</h1>
-                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" alt="Pikachu" class="w-48 h-48 mx-auto my-4">
-                <p class="text-gray-600 mb-8 w-full max-w-md">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800">AI윤리 포켓몬 게임</h1>
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" alt="Pikachu" class="w-48 h-48 mx-auto">
+                <p class="text-gray-600 w-full max-w-md">
                     인공지능 윤리 퀴즈를 풀고 기술을 배워 포켓몬 배틀에서 승리하세요!
                     퀴즈를 맞히면 새로운 기술을 배울 수 있습니다. 배운 기술을 활용하여 7개의 스테이지를 모두 클리어하고 AI 윤리 마스터가 되어보세요!
                 </p>
@@ -80,15 +80,15 @@
                 <div class="w-full bg-gray-100 rounded-lg p-4 sm:p-6 text-center shadow-inner flex-grow flex flex-col justify-center">
                     <p id="question-number" class="text-sm text-indigo-500 font-bold mb-2"></p>
                     <p id="question-text" class="text-base sm:text-lg font-bold text-gray-800 mb-6 flex items-center justify-center flex-grow"></p>
-                    <div id="answer-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"></div>
+                    <div id="answer-options" class="grid gap-3"></div>
                 </div>
                 <div id="feedback-message" class="mt-4 text-lg font-bold h-6"></div>
             </div>
             
             <!-- Screen 3: Battle Screen -->
             <div id="battle-screen" class="screen flex-col flex-grow justify-around">
-                <h1 id="stage-title-battle" class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-4"></h1>
-                <div class="flex justify-between items-center mb-4">
+                <h1 id="stage-title-battle" class="text-2xl sm:text-3xl font-bold text-center text-gray-800"></h1>
+                <div class="flex justify-between items-center">
                     <div class="flex-1"></div>
                     <div class="flex items-center space-x-2 sm:space-x-4">
                         <div class="text-right">
@@ -100,7 +100,7 @@
                         <img id="opponent-img" class="w-20 h-20 sm:w-24 md:w-32 battle-pokemon" src="" alt="Opponent Pokemon">
                     </div>
                 </div>
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex justify-between items-center">
                     <div class="flex items-center space-x-2 sm:space-x-4">
                         <img id="player-img" class="w-20 h-20 sm:w-24 md:w-32 battle-pokemon" src="" alt="Player Pokemon">
                         <div>
@@ -112,7 +112,7 @@
                     </div>
                     <div class="flex-1"></div>
                 </div>
-                <div class="bg-gray-100 rounded-lg p-2 sm:p-4 mt-4">
+                <div class="bg-gray-100 rounded-lg p-2 sm:p-4">
                     <div id="battle-log" class="mb-2 h-6 text-center font-bold text-gray-700"></div>
                     <div class="grid grid-cols-2 gap-3">
                         <div id="skill-buttons" class="grid grid-cols-2 gap-2 col-span-2 sm:col-span-1"></div>
@@ -126,7 +126,7 @@
             </div>
         </div>
 
-        <!-- Modals (remain outside the content area for proper layering) -->
+        <!-- Modals -->
         <div id="stage-clear-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30 p-4">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-sm">
                 <h2 class="text-3xl font-bold mb-4 text-blue-500">🎉 스테이지 클리어! 🎉</h2>
@@ -134,8 +134,6 @@
                 <button id="next-stage-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-lg">다음 스테이지로</button>
             </div>
         </div>
-
-        <!-- New Level Up Modal -->
         <div id="level-up-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30 p-4">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-sm">
                 <h2 class="text-3xl font-bold mb-4 text-green-500">✨ 성장 보너스! ✨</h2>
@@ -146,7 +144,6 @@
                 </div>
             </div>
         </div>
-
         <div id="result-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-30 p-4">
             <div class="bg-white rounded-2xl p-8 text-center shadow-xl w-full max-w-sm">
                 <h2 id="result-title" class="text-4xl font-bold mb-4"></h2>

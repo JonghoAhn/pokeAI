@@ -5,40 +5,11 @@ let playerInventory = { potion: 0 };
 const QUESTIONS_PER_STAGE = 2;
 let correctAnswersThisStage = 0;
 let battleLogTimeout;
-let currentGameScale = 1; // Variable to store the current scale factor
-
-// --- Design Constants for Scaling ---
-const DESIGN_WIDTH = 768;
-const DESIGN_HEIGHT = 1024;
-const PC_BREAKPOINT = 768; // Width to switch between PC and mobile scaling
 
 // --- DOM Elements ---
 const screens = { start: document.getElementById('start-screen'), selection: document.getElementById('selection-screen'), quiz: document.getElementById('quiz-screen'), battle: document.getElementById('battle-screen') };
 const modals = { result: document.getElementById('result-modal'), skillSelection: document.getElementById('skill-selection-modal'), stageClear: document.getElementById('stage-clear-modal'), forgetSkill: document.getElementById('forget-skill-modal'), explanation: document.getElementById('explanation-modal'), typeChart: document.getElementById('type-chart-modal'), record: document.getElementById('record-modal'), hallOfFame: document.getElementById('hall-of-fame-modal'), levelUp: document.getElementById('level-up-modal') };
 const bgm = { battle: document.getElementById('bgm-battle'), quiz: document.getElementById('bgm-quiz') };
-
-// --- Scaling and Resize Logic ---
-function resizeGame() {
-    const gameContainer = document.getElementById('game-container');
-    if (!gameContainer) return;
-
-    const screenWidth = window.innerWidth;
-    
-    // Only apply scaling on screens smaller than the PC breakpoint
-    if (screenWidth < PC_BREAKPOINT) {
-        // --- Mobile Logic ---
-        const screenHeight = window.innerHeight;
-        const scale = Math.min(screenWidth / DESIGN_WIDTH, screenHeight / DESIGN_HEIGHT);
-        gameContainer.style.transform = `scale(${scale})`;
-        currentGameScale = scale; // Store current scale
-    } else {
-        // --- PC Logic ---
-        // On larger screens, remove scaling to show the game at its original size
-        gameContainer.style.transform = 'none';
-        currentGameScale = 1; // Reset scale
-    }
-}
-
 
 // --- Screen & Modal Management ---
 function showScreen(screenName) {
@@ -178,7 +149,7 @@ function loadQuestion() {
     const shuffledOptions = shuffleArray([...quiz.options]);
     shuffledOptions.forEach(option => {
         const button = document.createElement('button');
-        button.className = 'bg-white hover:bg-blue-100 text-blue-800 font-semibold py-3 px-4 border border-blue-400 rounded-lg shadow transition text-sm sm:text-base';
+        button.className = 'bg-white hover:bg-blue-100 text-blue-800 font-semibold py-3 px-4 border border-blue-400 rounded-lg shadow transition text-base';
         button.textContent = option;
         button.onclick = () => checkAnswer(option);
         container.appendChild(button);
@@ -396,11 +367,10 @@ function playAttackAnimation(attackerImg, defenderImg, skill) {
     const defenderRect = defenderImg.getBoundingClientRect();
     const overlayRect = overlay.getBoundingClientRect();
 
-    // Adjust coordinates based on the current game scale
-    const startX = (attackerRect.left + attackerRect.width / 2 - overlayRect.left) / currentGameScale;
-    const startY = (attackerRect.top + attackerRect.height / 2 - overlayRect.top) / currentGameScale;
-    const endX = (defenderRect.left + defenderRect.width / 2 - overlayRect.left) / currentGameScale;
-    const endY = (defenderRect.top + defenderRect.height / 2 - overlayRect.top) / currentGameScale;
+    const startX = attackerRect.left + attackerRect.width / 2 - overlayRect.left;
+    const startY = attackerRect.top + attackerRect.height / 2 - overlayRect.top;
+    const endX = defenderRect.left + defenderRect.width / 2 - overlayRect.left;
+    const endY = defenderRect.top + defenderRect.height / 2 - overlayRect.top;
 
     const effectDiv = document.createElement('div');
     const typeClass = `effect-${skill.type}`;
@@ -410,7 +380,6 @@ function playAttackAnimation(attackerImg, defenderImg, skill) {
     effectDiv.style.setProperty('--start-y', `${startY}px`);
     effectDiv.style.setProperty('--end-x', `${endX}px`);
     effectDiv.style.setProperty('--end-y', `${endY}px`);
-    // The translation values also need to be un-scaled
     effectDiv.style.setProperty('--end-translate-x', `${endX - startX}px`);
     effectDiv.style.setProperty('--end-translate-y', `${endY - startY}px`);
 
@@ -597,12 +566,10 @@ function showHallOfFame() {
 
 // --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial setup
-    resizeGame();
+    // No scaling logic needed anymore, CSS handles responsiveness
     showScreen('start');
 
     // Event listeners
-    window.addEventListener('resize', resizeGame);
     document.getElementById('start-game-button').addEventListener('click', () => { initSelectionScreen(); showScreen('selection'); });
     document.getElementById('next-question-button').addEventListener('click', proceedAfterExplanation);
     document.getElementById('next-stage-button').addEventListener('click', startStage);
