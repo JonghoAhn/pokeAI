@@ -14,7 +14,7 @@ body {
     -webkit-text-size-adjust: 100%;
 }
 
-/* --- New Scaling Styles --- */
+/* --- Scaling Styles --- */
 #game-container {
     width: 768px; /* Design width (based on max-w-2xl) */
     height: 1024px; /* Taller design height for better mobile fit */
@@ -51,12 +51,14 @@ body {
 /* --- Attack Effect Styles --- */
 .effect {
     position: absolute;
-    transform: translate(-50%, -50%);
+    /* Base position is attacker's center. Will be overridden for stationary effects. */
     left: var(--start-x);
     top: var(--start-y);
+    /* All effects should be centered on their coordinates. */
+    transform: translate(-50%, -50%);
 }
 
-/* 노말 타입 이펙트 */
+/* 노말 타입 이펙트 (Moving) */
 .effect-노말 {
     width: 60px;
     height: 60px;
@@ -66,10 +68,10 @@ body {
 }
 @keyframes move-and-fade {
     0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
-    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1); opacity: 0; }
+    100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 0; }
 }
 
-/* 불 타입 이펙트 */
+/* 불 타입 이펙트 (Moving) */
 .effect-불 {
     width: 80px;
     height: 80px;
@@ -79,11 +81,11 @@ body {
 }
 @keyframes move-and-explode {
     0% { transform: translate(-50%, -50%) scale(0.2); }
-    50% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(0.5); }
-    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(2); opacity: 0; }
+    50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(0.5); }
+    100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(2); opacity: 0; }
 }
 
-/* 물 타입 이펙트 */
+/* 물 타입 이펙트 (Moving) */
 .effect-물::before {
     content: '';
     position: absolute;
@@ -95,27 +97,29 @@ body {
 }
 @keyframes move-and-splash {
     0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
-    50% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1); opacity: 1; }
-    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1.2); opacity: 0; border-width: 0px; }
+    50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 1; }
+    100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1.2); opacity: 0; border-width: 0px; }
 }
 
-/* 전기 타입 이펙트 */
+/* 전기 타입 이펙트 (Stationary) - CORRECTED */
 .effect-전기 {
     width: 100px;
     height: 100px;
     background: radial-gradient(circle, rgba(255, 255, 0, 0.8), transparent 60%);
     border-radius: 50%;
+    /* Position directly on the defender */
+    left: var(--end-x);
+    top: var(--end-y);
     animation: electric-shock 0.4s forwards;
-    transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%);
-    opacity: 0;
 }
 @keyframes electric-shock {
-    0% { opacity: 1; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(0.5); }
-    50% { opacity: 1; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(1); }
-    100% { opacity: 0; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(1); }
+    /* Animate at the fixed position */
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
 }
 
-/* 풀 타입 이펙트 */
+/* 풀 타입 이펙트 (Moving) */
 .effect-풀 {
     width: 20px;
     height: 30px;
@@ -125,10 +129,10 @@ body {
 }
 @keyframes move-and-spin {
     from { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; }
-    to { transform: translate(var(--end-translate-x), var(--end-translate-y)) rotate(720deg); opacity: 0; }
+    to { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) rotate(720deg); opacity: 0; }
 }
 
-/* 격투 타입 이펙트 */
+/* 격투 타입 이펙트 (Moving) */
 .effect-격투 {
     width: 50px;
     height: 50px;
@@ -138,22 +142,24 @@ body {
 }
 @keyframes punch-effect {
     0% { transform: translate(-50%, -50%) scale(0.5); }
-    50% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1.2); }
-    100% { transform: translate(var(--end-translate-x), var(--end-translate-y)) scale(1); opacity: 0; }
+    50% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1.2); }
+    100% { transform: translate(calc(var(--end-translate-x) - 50%), calc(var(--end-translate-y) - 50%)) scale(1); opacity: 0; }
 }
 
-/* 에스퍼 타입 이펙트 */
+/* 에스퍼 타입 이펙트 (Stationary) - CORRECTED */
 .effect-에스퍼 {
     width: 70px;
     height: 70px;
     border: 4px solid #f85888;
     border-radius: 50%;
     box-shadow: 0 0 15px #f85888;
+    /* Position directly on the defender */
+    left: var(--end-x);
+    top: var(--end-y);
     animation: psychic-wave 0.7s ease-out forwards;
-    transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%);
-    opacity: 0;
 }
 @keyframes psychic-wave {
-    0% { opacity: 1; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(0); }
-    100% { opacity: 0; transform: translate(var(--end-x), var(--end-y)) translate(-50%, -50%) scale(1.5); }
+    /* Animate at the fixed position */
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
 }
