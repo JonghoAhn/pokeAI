@@ -22,7 +22,6 @@ body {
     margin: 1rem auto;
     border-radius: 1rem;
     overflow: hidden;
-    /* This transition will apply when transform is changed by JS */
     transition: transform 0.1s ease-out;
     transform-origin: center;
 }
@@ -30,7 +29,6 @@ body {
 /* Apply scaling only when the screen is smaller than the PC breakpoint */
 @media (max-width: 767px) {
     body {
-        /* Ensure the container is centered when scaled */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -40,6 +38,22 @@ body {
         width: 768px; /* Fixed design width for scaling calculation */
         height: 1024px; /* Fixed design height */
         margin: 0; /* Remove margin for scaling */
+    }
+    
+    /* --- Mobile-only Quiz Screen Readability Improvements --- */
+    #quiz-screen #question-text {
+        font-size: 1.75rem !important;
+        line-height: 2.25rem !important;
+    }
+
+    #quiz-screen #answer-options {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    #quiz-screen #answer-options button {
+        padding: 1rem !important;
+        font-size: 1.25rem !important;
     }
 }
 
@@ -176,20 +190,4 @@ body {
 @keyframes psychic-wave {
     0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
     100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-}
-
-/* --- Quiz Screen Readability Improvements --- */
-#quiz-screen #question-text {
-    font-size: 1.75rem !important;
-    line-height: 2.25rem !important;
-}
-
-#quiz-screen #answer-options {
-    grid-template-columns: 1fr !important;
-    gap: 1rem !important;
-}
-
-#quiz-screen #answer-options button {
-    padding: 1rem !important;
-    font-size: 1.25rem !important;
 }

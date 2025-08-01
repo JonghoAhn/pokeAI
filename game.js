@@ -5,6 +5,7 @@ let playerInventory = { potion: 0 };
 const QUESTIONS_PER_STAGE = 2;
 let correctAnswersThisStage = 0;
 let battleLogTimeout;
+let currentGameScale = 1; // Variable to store the current scale factor
 
 // --- Design Constants for Scaling ---
 const DESIGN_WIDTH = 768;
@@ -29,10 +30,12 @@ function resizeGame() {
         const screenHeight = window.innerHeight;
         const scale = Math.min(screenWidth / DESIGN_WIDTH, screenHeight / DESIGN_HEIGHT);
         gameContainer.style.transform = `scale(${scale})`;
+        currentGameScale = scale; // Store current scale
     } else {
         // --- PC Logic ---
         // On larger screens, remove scaling to show the game at its original size
         gameContainer.style.transform = 'none';
+        currentGameScale = 1; // Reset scale
     }
 }
 
@@ -393,10 +396,11 @@ function playAttackAnimation(attackerImg, defenderImg, skill) {
     const defenderRect = defenderImg.getBoundingClientRect();
     const overlayRect = overlay.getBoundingClientRect();
 
-    const startX = attackerRect.left + attackerRect.width / 2 - overlayRect.left;
-    const startY = attackerRect.top + attackerRect.height / 2 - overlayRect.top;
-    const endX = defenderRect.left + defenderRect.width / 2 - overlayRect.left;
-    const endY = defenderRect.top + defenderRect.height / 2 - overlayRect.top;
+    // Adjust coordinates based on the current game scale
+    const startX = (attackerRect.left + attackerRect.width / 2 - overlayRect.left) / currentGameScale;
+    const startY = (attackerRect.top + attackerRect.height / 2 - overlayRect.top) / currentGameScale;
+    const endX = (defenderRect.left + defenderRect.width / 2 - overlayRect.left) / currentGameScale;
+    const endY = (defenderRect.top + defenderRect.height / 2 - overlayRect.top) / currentGameScale;
 
     const effectDiv = document.createElement('div');
     const typeClass = `effect-${skill.type}`;
@@ -406,6 +410,7 @@ function playAttackAnimation(attackerImg, defenderImg, skill) {
     effectDiv.style.setProperty('--start-y', `${startY}px`);
     effectDiv.style.setProperty('--end-x', `${endX}px`);
     effectDiv.style.setProperty('--end-y', `${endY}px`);
+    // The translation values also need to be un-scaled
     effectDiv.style.setProperty('--end-translate-x', `${endX - startX}px`);
     effectDiv.style.setProperty('--end-translate-y', `${endY - startY}px`);
 
